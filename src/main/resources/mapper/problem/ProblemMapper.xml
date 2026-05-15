@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mathbank.problem.mapper.ProblemMapper">
+
+    <resultMap id="ProblemListResultMap" type="com.mathbank.problem.dto.ProblemListDto">
+        <id     property="id"        column="id"/>
+        <result property="title"     column="title"/>
+        <result property="createdAt" column="created_at"/>
+        <collection property="tagList" ofType="com.mathbank.problem.domain.Tag">
+            <id     property="id"        column="tag_id"/>
+            <result property="tagType"   column="tag_type"/>
+            <result property="tagValue"  column="tag_value"/>
+            <result property="sortOrder" column="sort_order"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="ProblemDetailResultMap" type="com.mathbank.problem.dto.ProblemDetailDto">
+        <id     property="id"          column="id"/>
+        <result property="title"       column="title"/>
+        <result property="content"     column="content"/>
+        <result property="answer"      column="answer"/>
+        <result property="explanation" column="explanation"/>
+        <result property="createdBy"   column="created_by"/>
+        <result property="createdAt"   column="created_at"/>
+        <result property="updatedAt"   column="updated_at"/>
+        <collection property="tagList" ofType="com.mathbank.problem.domain.Tag">
+            <id     property="id"        column="tag_id"/>
+            <result property="tagType"   column="tag_type"/>
+            <result property="tagValue"  column="tag_value"/>
+            <result property="sortOrder" column="sort_order"/>
+        </collection>
+    </resultMap>
+
+    <!-- 페이징: 서브쿼리로 문제 먼저 limit 후 태그 JOIN -->
+    <select id="findAll" resultMap="ProblemListResultMap">
+        SELECT p.id, p.title, p.created_at,
+               t.id AS tag_id, t.tag_type, t.tag_value, t.sort_order
+        FROM (
+            SELECT id, title, created_at
+            FROM problem
+            ORDER BY created_at DESC
+            LIMIT #{size} OFFSET #{offset}
+        ) p
+        LEFT JOIN problem_tag pt ON p.id = pt.problem_id
+        LEFT JOIN tag t ON pt.tag_id = t.id
+        ORDER BY p.created_at DESC, t.sort_order ASC
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM problem
+    </select>
+
+    <select id="findById" parameterType="Long" resultType="com.mathbank.problem.domain.Problem">
+        SELECT id, title, content, answer, explanation, created_by, created_at, updated_at
+        FROM problem
+        WHERE id = #{id}
+    </select>
+
+    <select id="findDetailById" parameterType="Long" resultMap="ProblemDetailResultMap">
+        SELECT p.id, p.title, p.content, p.answer, p.explanation,
+               p.created_by, p.created_at, p.updated_at,
+               t.id AS tag_id, t.tag_type, t.tag_value, t.sort_order
+        FROM problem p
+        LEFT JOIN problem_tag pt ON p.id = pt.problem_id
+        LEFT JOIN tag t ON pt.tag_id = t.id
+        WHERE p.id = #{id}
+        ORDER BY t.sort_order ASC
+    </select>
+
+    <insert id="insert" parameterType="com.mathbank.problem.domain.Problem"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO problem (title, content, answer, explanation, created_by)
+        VALUES (#{title}, #{content}, #{answer}, #{explanation}, #{createdBy})
+    </insert>
+
+    <update id="update" parameterType="com.mathbank.problem.domain.Problem">
+        UPDATE problem
+        SET title       = #{title},
+            content     = #{content},
+            answer      = #{answer},
+            explanation = #{explanation},
+            updated_at  = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="Long">
+        DELETE FROM problem WHERE id = #{id}
+    </delete>
+
+    <insert id="insertTags">
+        INSERT INTO problem_tag (problem_id, tag_id) VALUES
+        <foreach collection="tagIds" item="tagId" separator=",">
+            (#{problemId}, #{tagId})
+        </foreach>
+    </insert>
+
+    <delete id="deleteTagsByProblemId">
+        DELETE FROM problem_tag WHERE problem_id = #{problemId}
+    </delete>
+
+</mapper>

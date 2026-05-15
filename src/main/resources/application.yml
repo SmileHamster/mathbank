@@ -7,6 +7,12 @@ spring:
     username: root
     password: 1234
 
+  sql:
+    init:
+      data-locations: classpath:sql/tag_data.sql
+      mode: always
+      encoding: UTF-8
+
   thymeleaf:
     cache: false
     encoding: UTF-8

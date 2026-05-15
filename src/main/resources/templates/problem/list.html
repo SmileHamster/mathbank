@@ -2,9 +2,90 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/default}">
+<head>
+    <title>문제 목록</title>
+</head>
 <body>
 <div layout:fragment="content">
-    <p>문제 목록 준비 중</p>
+
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-xl font-bold text-gray-800">문제 목록</h1>
+        <a th:href="@{/problem/new}"
+           class="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors">
+            새 문제 등록
+        </a>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="px-4 py-3 text-left text-gray-600 font-medium w-14">번호</th>
+                    <th class="px-4 py-3 text-left text-gray-600 font-medium">제목</th>
+                    <th class="px-4 py-3 text-left text-gray-600 font-medium w-72">태그</th>
+                    <th class="px-4 py-3 text-left text-gray-600 font-medium w-28">등록일</th>
+                    <th class="px-4 py-3 text-center text-gray-600 font-medium w-32">관리</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(problems)}">
+                    <td colspan="5" class="px-4 py-12 text-center text-gray-400">등록된 문제가 없습니다.</td>
+                </tr>
+                <tr th:each="problem, stat : ${problems}"
+                    class="border-b border-gray-100 hover:bg-gray-50">
+                    <td class="px-4 py-3 text-gray-500"
+                        th:text="${(pageInfo.currentPage - 1) * pageInfo.pageSize + stat.index + 1}"></td>
+                    <td class="px-4 py-3">
+                        <a th:href="@{/problem/{id}(id=${problem.id})}"
+                           th:text="${problem.title}"
+                           class="text-gray-800 hover:text-indigo-600"></a>
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex flex-wrap gap-1">
+                            <span th:each="tag : ${problem.tagList}"
+                                  th:text="${tag.tagValue}"
+                                  th:class="${'text-xs px-2 py-0.5 rounded-full ' +
+                                      (tag.tagType == 'GRADE'      ? 'bg-blue-100 text-blue-700'  :
+                                      (tag.tagType == 'DIFFICULTY' ? 'bg-red-100 text-red-700'   :
+                                      (tag.tagType == 'TYPE'       ? 'bg-green-100 text-green-700' :
+                                                                     'bg-gray-100 text-gray-700')))}">
+                            </span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-gray-500"
+                        th:text="${#temporals.format(problem.createdAt, 'yyyy-MM-dd')}"></td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <a th:href="@{/problem/{id}(id=${problem.id})}"
+                               class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50">상세</a>
+                            <a th:href="@{/problem/{id}/edit(id=${problem.id})}"
+                               class="text-xs px-2 py-1 rounded border border-indigo-300 text-indigo-600 hover:bg-indigo-50">수정</a>
+                            <form th:action="@{/problem/{id}/delete(id=${problem.id})}" method="post" class="inline">
+                                <button type="submit"
+                                        onclick="return confirm('이 문제를 삭제하시겠습니까?')"
+                                        class="text-xs px-2 py-1 rounded border border-red-300 text-red-600 hover:bg-red-50">삭제</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 페이지네이션 -->
+    <div class="flex items-center justify-center gap-3 mt-6" th:if="${pageInfo.totalPages > 0}">
+        <a th:href="@{/problem/list(page=${pageInfo.currentPage - 1})}"
+           th:class="${pageInfo.hasPrev()} ? 'px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-50' : 'px-3 py-1.5 text-sm rounded border border-gray-200 text-gray-300 pointer-events-none'">
+            이전
+        </a>
+        <span class="text-sm text-gray-600"
+              th:text="${pageInfo.currentPage} + ' / ' + ${pageInfo.totalPages}"></span>
+        <a th:href="@{/problem/list(page=${pageInfo.currentPage + 1})}"
+           th:class="${pageInfo.hasNext()} ? 'px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-50' : 'px-3 py-1.5 text-sm rounded border border-gray-200 text-gray-300 pointer-events-none'">
+            다음
+        </a>
+    </div>
+
 </div>
 </body>
 </html>
