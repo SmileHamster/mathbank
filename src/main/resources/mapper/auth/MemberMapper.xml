@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mathbank.auth.mapper.MemberMapper">
+
+    <select id="findByUsername" parameterType="String" resultType="com.mathbank.auth.domain.Member">
+        SELECT id, username, password, role, created_at
+        FROM member
+        WHERE username = #{username}
+    </select>
+
+    <insert id="insert" parameterType="com.mathbank.auth.domain.Member" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO member (username, password, role)
+        VALUES (#{username}, #{password}, #{role})
+    </insert>
+
+    <update id="updatePassword">
+        UPDATE member SET password = #{password} WHERE username = #{username}
+    </update>
+
+</mapper>

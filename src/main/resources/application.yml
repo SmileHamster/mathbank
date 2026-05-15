@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: mathbank
+
+  datasource:
+    url: jdbc:mariadb://localhost:3309/mathbank?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    username: root
+    password: 1234
+
+  thymeleaf:
+    cache: false
+    encoding: UTF-8
+    mode: HTML
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: >-
+    com.mathbank.problem.domain,
+    com.mathbank.examsheet.domain,
+    com.mathbank.attempt.domain,
+    com.mathbank.auth.domain
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+logging:
+  level:
+    com.mathbank: DEBUG
+    org.mybatis: DEBUG
+    org.springframework.security: INFO

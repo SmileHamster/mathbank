@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title layout:title-pattern="$CONTENT_TITLE - MathBank">MathBank</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" defer></script>
+</head>
+<body class="bg-white flex h-screen overflow-hidden">
+
+<!-- 좌측 고정 사이드바 -->
+<aside class="w-56 bg-gray-50 border-r border-gray-200 flex flex-col flex-shrink-0 h-full">
+    <div class="px-6 py-5 border-b border-gray-200">
+        <span class="text-indigo-700 font-bold text-xl">MathBank</span>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-1">
+        <a th:href="@{/problem/list}"
+           th:classappend="${requestUri.startsWith('/problem')} ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700 hover:bg-gray-100'"
+           class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors">
+            문제 관리
+        </a>
+        <a th:href="@{/examsheet/list}"
+           th:classappend="${requestUri.startsWith('/examsheet')} ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700 hover:bg-gray-100'"
+           class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors">
+            시험지 관리
+        </a>
+        <a th:href="@{/attempt/students}"
+           th:classappend="${requestUri.startsWith('/attempt')} ? 'bg-indigo-100 text-indigo-700' : 'text-gray-700 hover:bg-gray-100'"
+           class="flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors">
+            학생 관리
+        </a>
+    </nav>
+</aside>
+
+<!-- 우측 메인 영역 -->
+<div class="flex flex-col flex-1 overflow-hidden">
+    <!-- 상단 헤더 -->
+    <header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-end gap-4 flex-shrink-0">
+        <span class="text-sm text-gray-600" sec:authentication="name"></span>
+        <form th:action="@{/auth/logout}" method="post">
+            <button type="submit"
+                    class="text-sm px-3 py-1.5 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+                로그아웃
+            </button>
+        </form>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="flex-1 overflow-auto p-6">
+        <div layout:fragment="content">
+            <!-- 페이지별 컨텐츠 -->
+        </div>
+    </main>
+</div>
+
+<script th:inline="none">
+    document.addEventListener("DOMContentLoaded", function() {
+        renderMathInElement(document.body, {
+            delimiters: [
+                {left: "$$", right: "$$", display: true},
+                {left: "$", right: "$", display: false},
+                {left: "\\[", right: "\\]", display: true},
+                {left: "\\(", right: "\\)", display: false}
+            ]
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  thymeleaf:
+    cache: true
+
+logging:
+  level:
+    com.mathbank: INFO
+    org.mybatis: WARN
+    org.springframework.security: WARN
