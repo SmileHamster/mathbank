@@ -63,6 +63,13 @@
             <artifactId>mariadb-java-client</artifactId>
         </dependency>
 
+        <!-- OpenPDF — iText AGPL 라이선스 문제 없는 대안 -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>2.0.3</version>
+        </dependency>
+
         <!-- Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
