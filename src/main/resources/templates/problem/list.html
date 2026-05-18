@@ -8,7 +8,7 @@
 <body>
 <div layout:fragment="content">
 
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-4">
         <h1 class="text-xl font-bold text-gray-800">문제 목록</h1>
         <a th:href="@{/problem/new}"
            class="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors">
@@ -16,6 +16,58 @@
         </a>
     </div>
 
+    <!-- 검색 폼 -->
+    <div class="bg-white border border-gray-200 rounded-lg mb-4">
+        <form method="get" th:action="@{/problem/list}">
+            <div class="px-4 py-3 flex items-center gap-3">
+                <input type="text" name="keyword" th:value="${searchDto.keyword}"
+                       placeholder="제목 검색"
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400"/>
+                <button type="button" id="filterToggle"
+                        class="px-3 py-2 text-sm border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50 whitespace-nowrap">
+                    필터 펼치기 ▼
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition-colors">
+                    검색
+                </button>
+                <a th:href="@{/problem/list}"
+                   class="px-4 py-2 text-sm border border-gray-300 rounded-md text-gray-600 hover:bg-gray-50">
+                    초기화
+                </a>
+            </div>
+
+            <!-- 태그 필터 패널 (기본 접힘) -->
+            <div id="filterPanel"
+                 th:attr="data-has-condition=${searchDto.hasCondition}"
+                 class="hidden border-t border-gray-200 px-4 py-3 space-y-3">
+                <div th:each="entry : ${tagGroups}" class="flex items-start gap-3">
+                    <span class="w-16 flex-shrink-0 text-xs font-semibold text-gray-500 pt-0.5"
+                          th:text="${entry.key == 'GRADE'     ? '학년'   :
+                                   (entry.key == 'SEMESTER'  ? '학기'   :
+                                   (entry.key == 'UNIT'      ? '대단원' :
+                                   (entry.key == 'SUB_UNIT'  ? '소단원' :
+                                   (entry.key == 'TYPE'      ? '유형'   : '난이도'))))}">
+                    </span>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1">
+                        <label th:each="tag : ${entry.value}" class="flex items-center gap-1 cursor-pointer">
+                            <input type="checkbox" name="tagIds" th:value="${tag.id}"
+                                   th:checked="${searchDto.tagIds != null and searchDto.tagIds.contains(tag.id)}"
+                                   class="w-3.5 h-3.5 accent-indigo-600"/>
+                            <span th:text="${tag.tagValue}" class="text-sm text-gray-700"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- 검색 결과 안내 -->
+    <p th:if="${searchDto.hasCondition}"
+       class="text-sm text-gray-500 mb-3"
+       th:text="'총 ' + ${pageInfo.totalCount} + '개의 문제가 검색되었습니다.'"></p>
+
+    <!-- 문제 테이블 -->
     <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <table class="w-full text-sm">
             <thead class="bg-gray-50 border-b border-gray-200">
@@ -29,7 +81,9 @@
             </thead>
             <tbody>
                 <tr th:if="${#lists.isEmpty(problems)}">
-                    <td colspan="5" class="px-4 py-12 text-center text-gray-400">등록된 문제가 없습니다.</td>
+                    <td colspan="5" class="px-4 py-12 text-center text-gray-400">
+                        <span th:text="${searchDto.hasCondition} ? '검색 결과가 없습니다.' : '등록된 문제가 없습니다.'"></span>
+                    </td>
                 </tr>
                 <tr th:each="problem, stat : ${problems}"
                     class="border-b border-gray-100 hover:bg-gray-50">
@@ -45,8 +99,8 @@
                             <span th:each="tag : ${problem.tagList}"
                                   th:text="${tag.tagValue}"
                                   th:class="${'text-xs px-2 py-0.5 rounded-full ' +
-                                      (tag.tagType == 'GRADE'      ? 'bg-blue-100 text-blue-700'  :
-                                      (tag.tagType == 'DIFFICULTY' ? 'bg-red-100 text-red-700'   :
+                                      (tag.tagType == 'GRADE'      ? 'bg-blue-100 text-blue-700'   :
+                                      (tag.tagType == 'DIFFICULTY' ? 'bg-red-100 text-red-700'    :
                                       (tag.tagType == 'TYPE'       ? 'bg-green-100 text-green-700' :
                                                                      'bg-gray-100 text-gray-700')))}">
                             </span>
@@ -72,20 +126,38 @@
         </table>
     </div>
 
-    <!-- 페이지네이션 -->
+    <!-- 페이지네이션 (검색 조건 유지) -->
     <div class="flex items-center justify-center gap-3 mt-6" th:if="${pageInfo.totalPages > 0}">
-        <a th:href="@{/problem/list(page=${pageInfo.currentPage - 1})}"
+        <a th:href="@{/problem/list(page=${pageInfo.currentPage - 1}, keyword=${searchDto.keyword}, tagIds=${searchDto.tagIds})}"
            th:class="${pageInfo.hasPrev()} ? 'px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-50' : 'px-3 py-1.5 text-sm rounded border border-gray-200 text-gray-300 pointer-events-none'">
             이전
         </a>
         <span class="text-sm text-gray-600"
               th:text="${pageInfo.currentPage} + ' / ' + ${pageInfo.totalPages}"></span>
-        <a th:href="@{/problem/list(page=${pageInfo.currentPage + 1})}"
+        <a th:href="@{/problem/list(page=${pageInfo.currentPage + 1}, keyword=${searchDto.keyword}, tagIds=${searchDto.tagIds})}"
            th:class="${pageInfo.hasNext()} ? 'px-3 py-1.5 text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-50' : 'px-3 py-1.5 text-sm rounded border border-gray-200 text-gray-300 pointer-events-none'">
             다음
         </a>
     </div>
 
+</div>
+<div layout:fragment="scripts">
+<script th:inline="none">
+document.addEventListener("DOMContentLoaded", function () {
+    const toggle = document.getElementById('filterToggle');
+    const panel  = document.getElementById('filterPanel');
+
+    if (panel.dataset.hasCondition === 'true') {
+        panel.classList.remove('hidden');
+        toggle.textContent = '필터 접기 ▲';
+    }
+
+    toggle.addEventListener('click', function () {
+        panel.classList.toggle('hidden');
+        toggle.textContent = panel.classList.contains('hidden') ? '필터 펼치기 ▼' : '필터 접기 ▲';
+    });
+});
+</script>
 </div>
 </body>
 </html>

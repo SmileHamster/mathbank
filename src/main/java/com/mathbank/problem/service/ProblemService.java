@@ -2,11 +2,11 @@ package com.mathbank.problem.service;
 
 import com.mathbank.common.exception.ResourceNotFoundException;
 import com.mathbank.common.util.PageInfo;
-import com.mathbank.common.util.PageRequest;
 import com.mathbank.problem.domain.Problem;
 import com.mathbank.problem.dto.ProblemDetailDto;
 import com.mathbank.problem.dto.ProblemFormDto;
 import com.mathbank.problem.dto.ProblemListDto;
+import com.mathbank.problem.dto.ProblemSearchDto;
 import com.mathbank.problem.mapper.ProblemMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,18 +22,15 @@ public class ProblemService {
 
     private final ProblemMapper problemMapper;
 
-    public Map<String, Object> getProblemList(int page, int size) {
-        PageRequest pageRequest = new PageRequest();
-        pageRequest.setPage(page);
-        pageRequest.setSize(size);
-
-        List<ProblemListDto> problems = problemMapper.findAll(pageRequest);
-        int totalCount = problemMapper.countAll();
-        PageInfo pageInfo = new PageInfo(page, size, totalCount);
+    public Map<String, Object> getProblemList(ProblemSearchDto searchDto) {
+        List<ProblemListDto> problems = problemMapper.search(searchDto);
+        int totalCount = problemMapper.countSearch(searchDto);
+        PageInfo pageInfo = new PageInfo(searchDto.getPage(), searchDto.getSize(), totalCount);
 
         Map<String, Object> result = new HashMap<>();
         result.put("problems", problems);
         result.put("pageInfo", pageInfo);
+        result.put("searchDto", searchDto);
         return result;
     }
 

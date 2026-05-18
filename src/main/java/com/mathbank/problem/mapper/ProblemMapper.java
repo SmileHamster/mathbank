@@ -1,9 +1,9 @@
 package com.mathbank.problem.mapper;
 
-import com.mathbank.common.util.PageRequest;
 import com.mathbank.problem.domain.Problem;
 import com.mathbank.problem.dto.ProblemDetailDto;
 import com.mathbank.problem.dto.ProblemListDto;
+import com.mathbank.problem.dto.ProblemSearchDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -11,8 +11,8 @@ import java.util.List;
 
 @Mapper
 public interface ProblemMapper {
-    List<ProblemListDto> findAll(PageRequest pageRequest);
-    int countAll();
+    List<ProblemListDto> search(ProblemSearchDto searchDto);
+    int countSearch(ProblemSearchDto searchDto);
     Problem findById(Long id);
     ProblemDetailDto findDetailById(Long id);
     void insert(Problem problem);

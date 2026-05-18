@@ -4,6 +4,7 @@ import com.mathbank.auth.mapper.MemberMapper;
 import com.mathbank.problem.domain.Tag;
 import com.mathbank.problem.dto.ProblemDetailDto;
 import com.mathbank.problem.dto.ProblemFormDto;
+import com.mathbank.problem.dto.ProblemSearchDto;
 import com.mathbank.problem.service.ProblemService;
 import com.mathbank.problem.service.TagService;
 import jakarta.validation.Valid;
@@ -29,12 +30,12 @@ public class ProblemController {
     private final MemberMapper memberMapper;
 
     @GetMapping("/list")
-    public String list(@RequestParam(defaultValue = "1") int page,
-                       @RequestParam(defaultValue = "10") int size,
-                       Model model) {
-        Map<String, Object> result = problemService.getProblemList(page, size);
+    public String list(@ModelAttribute ProblemSearchDto searchDto, Model model) {
+        Map<String, Object> result = problemService.getProblemList(searchDto);
         model.addAttribute("problems", result.get("problems"));
         model.addAttribute("pageInfo", result.get("pageInfo"));
+        model.addAttribute("searchDto", result.get("searchDto"));
+        model.addAttribute("tagGroups", tagService.getTagsGroupedByType());
         return "problem/list";
     }
 
