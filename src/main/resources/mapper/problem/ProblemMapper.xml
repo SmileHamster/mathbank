@@ -134,4 +134,26 @@
         DELETE FROM problem_tag WHERE problem_id = #{problemId}
     </delete>
 
+    <select id="findIdsByCondition" resultType="Long">
+        SELECT DISTINCT p.id
+        FROM problem p
+        INNER JOIN problem_tag pt_grade ON p.id = pt_grade.problem_id AND pt_grade.tag_id = #{gradeTagId}
+        <if test="semesterTagId != null">
+            INNER JOIN problem_tag pt_sem ON p.id = pt_sem.problem_id AND pt_sem.tag_id = #{semesterTagId}
+        </if>
+        <if test="unitTagIds != null and unitTagIds.size() > 0">
+            INNER JOIN (
+                SELECT problem_id
+                FROM problem_tag
+                WHERE tag_id IN
+                <foreach collection="unitTagIds" item="uid" open="(" separator="," close=")">
+                    #{uid}
+                </foreach>
+                GROUP BY problem_id
+                HAVING COUNT(DISTINCT tag_id) >= 1
+            ) pt_unit ON p.id = pt_unit.problem_id
+        </if>
+        INNER JOIN problem_tag pt_diff ON p.id = pt_diff.problem_id AND pt_diff.tag_id = #{difficultyTagId}
+    </select>
+
 </mapper>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>시험지 상세</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <!-- 헤더 -->
+    <div class="flex items-center justify-between mb-4">
+        <div>
+            <h1 class="text-xl font-bold text-gray-800" th:text="${examSheet.name}"></h1>
+            <p class="text-sm text-gray-500 mt-0.5"
+               th:text="'총 ' + ${examSheet.totalCount} + '문제 · ' + ${#temporals.format(examSheet.createdAt, 'yyyy-MM-dd')} + ' 생성'"></p>
+        </div>
+        <div class="flex gap-2">
+            <button type="button" id="toggleAllAnswers"
+                    class="px-3 py-2 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50">
+                정답 모두 보기
+            </button>
+            <a th:href="@{/examsheet/list}"
+               class="px-3 py-2 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50">
+                ← 목록
+            </a>
+            <form th:action="@{/examsheet/{id}/delete(id=${examSheet.id})}" method="post" class="inline">
+                <button type="submit"
+                        onclick="return confirm('이 시험지를 삭제하시겠습니까?')"
+                        class="px-3 py-2 text-sm border border-red-300 rounded text-red-600 hover:bg-red-50">
+                    삭제
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 문제 목록 -->
+    <div class="space-y-4">
+        <div th:each="problem : ${examSheet.problems}"
+             class="bg-white border border-gray-200 rounded-lg p-5">
+
+            <!-- 문제 번호 + 태그 -->
+            <div class="flex items-start justify-between mb-3">
+                <span class="text-sm font-bold text-indigo-600"
+                      th:text="'문제 ' + ${problem.sortOrder}"></span>
+                <div class="flex flex-wrap gap-1">
+                    <span th:each="tag : ${problem.tagList}"
+                          th:text="${tag.tagValue}"
+                          th:class="${'text-xs px-2 py-0.5 rounded-full ' +
+                              (tag.tagType == 'GRADE'      ? 'bg-blue-100 text-blue-700'   :
+                              (tag.tagType == 'DIFFICULTY' ? 'bg-red-100 text-red-700'     :
+                              (tag.tagType == 'TYPE'       ? 'bg-green-100 text-green-700' :
+                                                             'bg-gray-100 text-gray-700')))}">
+                    </span>
+                </div>
+            </div>
+
+            <!-- 제목 -->
+            <p class="text-sm font-medium text-gray-800 mb-2" th:text="${problem.title}"></p>
+
+            <!-- 본문 (KaTeX 렌더링) -->
+            <div class="text-sm text-gray-700 leading-relaxed mb-3"
+                 th:text="${problem.content}"></div>
+
+            <!-- 정답 토글 -->
+            <div class="border-t border-gray-100 pt-3">
+                <button type="button"
+                        th:attr="data-problem-id=${problem.problemId}"
+                        class="answer-toggle text-xs px-3 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50">
+                    정답 보기
+                </button>
+                <div th:attr="data-answer-for=${problem.problemId}"
+                     class="answer-box hidden mt-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded text-sm text-blue-800">
+                    <span class="font-medium">정답: </span>
+                    <span th:text="${problem.answer}"></span>
+                </div>
+                <div th:if="${problem.explanation != null and !#strings.isEmpty(problem.explanation)}"
+                     th:attr="data-explanation-for=${problem.problemId}"
+                     class="explanation-box hidden mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm text-gray-700">
+                    <span class="font-medium">해설: </span>
+                    <span th:text="${problem.explanation}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div layout:fragment="scripts">
+<script th:inline="none">
+document.addEventListener("DOMContentLoaded", function () {
+    // 개별 정답 토글
+    document.querySelectorAll('.answer-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const pid = btn.dataset.problemId;
+            const answerBox = document.querySelector('[data-answer-for="' + pid + '"]');
+            const explBox   = document.querySelector('[data-explanation-for="' + pid + '"]');
+            const showing   = !answerBox.classList.contains('hidden');
+            answerBox.classList.toggle('hidden', showing);
+            if (explBox) explBox.classList.toggle('hidden', showing);
+            btn.textContent = showing ? '정답 보기' : '정답 숨기기';
+        });
+    });
+
+    // 전체 정답 토글
+    let allShowing = false;
+    document.getElementById('toggleAllAnswers').addEventListener('click', function () {
+        allShowing = !allShowing;
+        document.querySelectorAll('.answer-box').forEach(function (el) {
+            el.classList.toggle('hidden', !allShowing);
+        });
+        document.querySelectorAll('.explanation-box').forEach(function (el) {
+            el.classList.toggle('hidden', !allShowing);
+        });
+        document.querySelectorAll('.answer-toggle').forEach(function (btn) {
+            btn.textContent = allShowing ? '정답 숨기기' : '정답 보기';
+        });
+        this.textContent = allShowing ? '정답 모두 숨기기' : '정답 모두 보기';
+    });
+});
+</script>
+</div>
+</body>
+</html>

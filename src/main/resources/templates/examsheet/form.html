@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>시험지 생성</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-xl font-bold text-gray-800">시험지 자동 생성</h1>
+        <a th:href="@{/examsheet/list}"
+           class="text-sm text-gray-500 hover:text-gray-700">← 목록으로</a>
+    </div>
+
+    <!-- 오류 메시지 -->
+    <div th:if="${errorMessage}"
+         class="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"
+         th:text="${errorMessage}"></div>
+
+    <form th:action="@{/examsheet/new}" method="post" th:object="${form}">
+
+        <!-- 시험지 이름 -->
+        <div class="bg-white border border-gray-200 rounded-lg p-5 mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">시험지 이름 <span class="text-red-500">*</span></label>
+            <input type="text" th:field="*{name}"
+                   placeholder="예) 2024년 중2 1학기 중간고사"
+                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400"/>
+            <p th:if="${#fields.hasErrors('name')}" th:errors="*{name}"
+               class="mt-1 text-xs text-red-500"></p>
+        </div>
+
+        <!-- 학년 선택 -->
+        <div class="bg-white border border-gray-200 rounded-lg p-5 mb-4">
+            <p class="text-sm font-medium text-gray-700 mb-2">학년 <span class="text-red-500">*</span></p>
+            <div class="flex flex-wrap gap-x-6 gap-y-2">
+                <label th:each="tag : ${gradeTags}" class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" th:field="*{gradeTagId}" th:value="${tag.id}"
+                           class="accent-indigo-600"/>
+                    <span th:text="${tag.tagValue}" class="text-sm text-gray-700"></span>
+                </label>
+            </div>
+            <p th:if="${#fields.hasErrors('gradeTagId')}" th:errors="*{gradeTagId}"
+               class="mt-1 text-xs text-red-500"></p>
+        </div>
+
+        <!-- 학기 선택 -->
+        <div class="bg-white border border-gray-200 rounded-lg p-5 mb-4">
+            <p class="text-sm font-medium text-gray-700 mb-2">학기 <span class="text-gray-400 font-normal">(선택)</span></p>
+            <div class="flex flex-wrap gap-x-6 gap-y-2">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="semesterTagId" value="" class="accent-indigo-600" checked/>
+                    <span class="text-sm text-gray-700">전체</span>
+                </label>
+                <label th:each="tag : ${semesterTags}" class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" th:name="semesterTagId" th:value="${tag.id}"
+                           class="accent-indigo-600"/>
+                    <span th:text="${tag.tagValue}" class="text-sm text-gray-700"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 단원 선택 -->
+        <div class="bg-white border border-gray-200 rounded-lg p-5 mb-4">
+            <p class="text-sm font-medium text-gray-700 mb-2">단원 <span class="text-gray-400 font-normal">(선택, 복수 선택 가능)</span></p>
+            <div class="flex flex-wrap gap-x-6 gap-y-2">
+                <label th:each="tag : ${unitTags}" class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" th:name="unitTagIds" th:value="${tag.id}"
+                           class="w-3.5 h-3.5 accent-indigo-600"/>
+                    <span th:text="${tag.tagValue}" class="text-sm text-gray-700"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 난이도별 문제 수 -->
+        <div class="bg-white border border-gray-200 rounded-lg p-5 mb-6">
+            <div class="flex items-center justify-between mb-3">
+                <p class="text-sm font-medium text-gray-700">난이도별 문제 수</p>
+                <span class="text-sm text-gray-500">합계: <span id="totalCount" class="font-semibold text-indigo-600">0</span>문제</span>
+            </div>
+            <div class="flex flex-wrap gap-6">
+                <div th:each="tag : ${difficultyTags}" class="flex items-center gap-2">
+                    <span th:text="${tag.tagValue}"
+                          class="text-sm font-medium text-gray-700 w-8"></span>
+                    <input type="number"
+                           th:name="'difficultyDistribution[' + ${tag.id} + ']'"
+                           min="0" max="50" value="0"
+                           class="difficulty-input w-20 px-3 py-1.5 border border-gray-300 rounded-md text-sm text-center focus:outline-none focus:ring-1 focus:ring-indigo-400"/>
+                    <span class="text-sm text-gray-500">문제</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+            <button type="submit"
+                    class="px-6 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors">
+                시험지 생성
+            </button>
+            <a th:href="@{/examsheet/list}"
+               class="px-6 py-2 border border-gray-300 text-gray-600 text-sm rounded hover:bg-gray-50 transition-colors">
+                취소
+            </a>
+        </div>
+
+    </form>
+
+</div>
+<div layout:fragment="scripts">
+<script th:inline="none">
+document.addEventListener("DOMContentLoaded", function () {
+    const inputs = document.querySelectorAll('.difficulty-input');
+    const totalEl = document.getElementById('totalCount');
+
+    function updateTotal() {
+        let sum = 0;
+        inputs.forEach(function (inp) {
+            const v = parseInt(inp.value, 10);
+            if (!isNaN(v) && v > 0) sum += v;
+        });
+        totalEl.textContent = sum;
+    }
+
+    inputs.forEach(function (inp) {
+        inp.addEventListener('input', updateTotal);
+    });
+    updateTotal();
+});
+</script>
+</div>
+</body>
+</html>

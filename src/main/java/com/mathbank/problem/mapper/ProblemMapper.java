@@ -20,4 +20,8 @@ public interface ProblemMapper {
     void deleteById(Long id);
     void insertTags(@Param("problemId") Long problemId, @Param("tagIds") List<Long> tagIds);
     void deleteTagsByProblemId(Long problemId);
+    List<Long> findIdsByCondition(@Param("gradeTagId") Long gradeTagId,
+                                  @Param("semesterTagId") Long semesterTagId,
+                                  @Param("unitTagIds") List<Long> unitTagIds,
+                                  @Param("difficultyTagId") Long difficultyTagId);
 }

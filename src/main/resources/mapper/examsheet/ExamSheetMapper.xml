@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mathbank.examsheet.mapper.ExamSheetMapper">
+
+    <resultMap id="ExamSheetDetailResultMap" type="com.mathbank.examsheet.dto.ExamSheetDetailDto">
+        <id     property="id"         column="id"/>
+        <result property="name"       column="name"/>
+        <result property="totalCount" column="total_count"/>
+        <result property="createdAt"  column="created_at"/>
+        <collection property="problems" ofType="com.mathbank.examsheet.dto.ExamSheetProblemDto">
+            <id     property="problemId"   column="problem_id"/>
+            <result property="sortOrder"   column="sort_order"/>
+            <result property="title"       column="title"/>
+            <result property="content"     column="content"/>
+            <result property="answer"      column="answer"/>
+            <result property="explanation" column="explanation"/>
+            <collection property="tagList" ofType="com.mathbank.problem.domain.Tag">
+                <id     property="id"        column="tag_id"/>
+                <result property="tagType"   column="tag_type"/>
+                <result property="tagValue"  column="tag_value"/>
+                <result property="sortOrder" column="tag_sort_order"/>
+            </collection>
+        </collection>
+    </resultMap>
+
+    <insert id="insertExamSheet" parameterType="com.mathbank.examsheet.domain.ExamSheet"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO exam_sheet (name, total_count, created_by)
+        VALUES (#{name}, #{totalCount}, #{createdBy})
+    </insert>
+
+    <insert id="insertExamSheetProblems">
+        INSERT INTO exam_sheet_problem (exam_sheet_id, problem_id, sort_order) VALUES
+        <foreach collection="problems" item="esp" separator=",">
+            (#{examSheetId}, #{esp.problemId}, #{esp.sortOrder})
+        </foreach>
+    </insert>
+
+    <select id="findAll" resultType="com.mathbank.examsheet.dto.ExamSheetListDto">
+        SELECT id, name, total_count, created_at
+        FROM exam_sheet
+        WHERE created_by = #{createdBy}
+        ORDER BY created_at DESC, id DESC
+    </select>
+
+    <select id="findDetailById" resultMap="ExamSheetDetailResultMap">
+        SELECT
+            es.id, es.name, es.total_count, es.created_at,
+            esp.problem_id, esp.sort_order,
+            p.title, p.content, p.answer, p.explanation,
+            t.id AS tag_id, t.tag_type, t.tag_value, t.sort_order AS tag_sort_order
+        FROM exam_sheet es
+        INNER JOIN exam_sheet_problem esp ON es.id = esp.exam_sheet_id
+        INNER JOIN problem p ON esp.problem_id = p.id
+        LEFT JOIN problem_tag pt ON p.id = pt.problem_id
+        LEFT JOIN tag t ON pt.tag_id = t.id
+        WHERE es.id = #{id}
+        ORDER BY esp.sort_order ASC, t.sort_order ASC
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM exam_sheet WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteProblemsById">
+        DELETE FROM exam_sheet_problem WHERE exam_sheet_id = #{examSheetId}
+    </delete>
+
+</mapper>

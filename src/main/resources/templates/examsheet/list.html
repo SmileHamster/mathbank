@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>시험지 관리</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-xl font-bold text-gray-800">시험지 목록</h1>
+        <a th:href="@{/examsheet/new}"
+           class="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors">
+            새 시험지 생성
+        </a>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="px-4 py-3 text-left text-gray-600 font-medium w-14">번호</th>
+                    <th class="px-4 py-3 text-left text-gray-600 font-medium">시험지명</th>
+                    <th class="px-4 py-3 text-left text-gray-600 font-medium w-24">문제 수</th>
+                    <th class="px-4 py-3 text-left text-gray-600 font-medium w-28">생성일</th>
+                    <th class="px-4 py-3 text-center text-gray-600 font-medium w-28">관리</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(examSheets)}">
+                    <td colspan="5" class="px-4 py-12 text-center text-gray-400">
+                        생성된 시험지가 없습니다.
+                    </td>
+                </tr>
+                <tr th:each="sheet, stat : ${examSheets}"
+                    class="border-b border-gray-100 hover:bg-gray-50">
+                    <td class="px-4 py-3 text-gray-500" th:text="${stat.index + 1}"></td>
+                    <td class="px-4 py-3">
+                        <a th:href="@{/examsheet/{id}(id=${sheet.id})}"
+                           th:text="${sheet.name}"
+                           class="text-gray-800 hover:text-indigo-600"></a>
+                    </td>
+                    <td class="px-4 py-3 text-gray-600" th:text="${sheet.totalCount} + '문제'"></td>
+                    <td class="px-4 py-3 text-gray-500"
+                        th:text="${#temporals.format(sheet.createdAt, 'yyyy-MM-dd')}"></td>
+                    <td class="px-4 py-3">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <a th:href="@{/examsheet/{id}(id=${sheet.id})}"
+                               class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50">상세</a>
+                            <form th:action="@{/examsheet/{id}/delete(id=${sheet.id})}" method="post" class="inline">
+                                <button type="submit"
+                                        onclick="return confirm('이 시험지를 삭제하시겠습니까?')"
+                                        class="text-xs px-2 py-1 rounded border border-red-300 text-red-600 hover:bg-red-50">삭제</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</body>
+</html>
