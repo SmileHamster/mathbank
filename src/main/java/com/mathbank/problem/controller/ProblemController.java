@@ -16,6 +16,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -54,10 +55,17 @@ public class ProblemController {
             model.addAttribute("tagGroups", tagService.getTagsGroupedByType());
             return "problem/form";
         }
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Long memberId = memberMapper.findByUsername(auth.getName()).getId();
-        problemService.createProblem(form, memberId);
-        return "redirect:/problem/list";
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            Long memberId = memberMapper.findByUsername(auth.getName()).getId();
+            problemService.createProblem(form, memberId);
+            return "redirect:/problem/list";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("tagGroups", tagService.getTagsGroupedByType());
+            model.addAttribute("selectedTagIds", form.getTagIds() != null ? new HashSet<>(form.getTagIds()) : new HashSet<>());
+            model.addAttribute("tagError", e.getMessage());
+            return "problem/form";
+        }
     }
 
     @GetMapping("/{id}")
@@ -101,8 +109,17 @@ public class ProblemController {
             model.addAttribute("tagGroups", tagService.getTagsGroupedByType());
             return "problem/form";
         }
-        problemService.updateProblem(id, form);
-        return "redirect:/problem/" + id;
+        try {
+            problemService.updateProblem(id, form);
+            return "redirect:/problem/" + id;
+        } catch (IllegalArgumentException e) {
+            ProblemDetailDto problem = problemService.getProblemDetail(id);
+            model.addAttribute("problem", problem);
+            model.addAttribute("selectedTagIds", form.getTagIds() != null ? new HashSet<>(form.getTagIds()) : new HashSet<>());
+            model.addAttribute("tagGroups", tagService.getTagsGroupedByType());
+            model.addAttribute("tagError", e.getMessage());
+            return "problem/form";
+        }
     }
 
     @PostMapping("/{id}/delete")

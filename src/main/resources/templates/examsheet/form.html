@@ -50,11 +50,14 @@
             <p class="text-sm font-medium text-gray-700 mb-2">학기 <span class="text-gray-400 font-normal">(선택)</span></p>
             <div class="flex flex-wrap gap-x-6 gap-y-2">
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="semesterTagId" value="" class="accent-indigo-600" checked/>
+                    <input type="radio" name="semesterTagId" value=""
+                           th:checked="${form.semesterTagId == null}"
+                           class="accent-indigo-600"/>
                     <span class="text-sm text-gray-700">전체</span>
                 </label>
                 <label th:each="tag : ${semesterTags}" class="flex items-center gap-2 cursor-pointer">
                     <input type="radio" th:name="semesterTagId" th:value="${tag.id}"
+                           th:checked="${form.semesterTagId != null and form.semesterTagId == tag.id}"
                            class="accent-indigo-600"/>
                     <span th:text="${tag.tagValue}" class="text-sm text-gray-700"></span>
                 </label>
@@ -67,6 +70,7 @@
             <div class="flex flex-wrap gap-x-6 gap-y-2">
                 <label th:each="tag : ${unitTags}" class="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" th:name="unitTagIds" th:value="${tag.id}"
+                           th:checked="${form.unitTagIds != null and form.unitTagIds.contains(tag.id)}"
                            class="w-3.5 h-3.5 accent-indigo-600"/>
                     <span th:text="${tag.tagValue}" class="text-sm text-gray-700"></span>
                 </label>
@@ -85,7 +89,8 @@
                           class="text-sm font-medium text-gray-700 w-8"></span>
                     <input type="number"
                            th:name="'difficultyDistribution[' + ${tag.id} + ']'"
-                           min="0" max="50" value="0"
+                           th:value="${form.difficultyDistribution.containsKey(tag.id) ? form.difficultyDistribution.get(tag.id) : 0}"
+                           min="0" max="50"
                            class="difficulty-input w-20 px-3 py-1.5 border border-gray-300 rounded-md text-sm text-center focus:outline-none focus:ring-1 focus:ring-indigo-400"/>
                     <span class="text-sm text-gray-500">문제</span>
                 </div>

@@ -8,6 +8,7 @@ import com.mathbank.problem.dto.ProblemFormDto;
 import com.mathbank.problem.dto.ProblemListDto;
 import com.mathbank.problem.dto.ProblemSearchDto;
 import com.mathbank.problem.mapper.ProblemMapper;
+import com.mathbank.problem.mapper.TagMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,12 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProblemService {
 
     private final ProblemMapper problemMapper;
+    private final TagMapper tagMapper;
 
     public Map<String, Object> getProblemList(ProblemSearchDto searchDto) {
         List<ProblemListDto> problems = problemMapper.search(searchDto);
@@ -42,8 +46,19 @@ public class ProblemService {
         return detail;
     }
 
+    private void validateSingleUnitTag(List<Long> tagIds) {
+        if (tagIds == null || tagIds.isEmpty()) return;
+        Set<Long> unitTagIds = tagMapper.findByType("UNIT").stream()
+                .map(tag -> tag.getId()).collect(Collectors.toSet());
+        long unitCount = tagIds.stream().filter(unitTagIds::contains).count();
+        if (unitCount > 1) {
+            throw new IllegalArgumentException("대단원 태그는 하나만 선택할 수 있습니다.");
+        }
+    }
+
     @Transactional
     public void createProblem(ProblemFormDto dto, Long memberId) {
+        validateSingleUnitTag(dto.getTagIds());
         Problem problem = Problem.builder()
                 .title(dto.getTitle())
                 .content(dto.getContent())
@@ -59,6 +74,7 @@ public class ProblemService {
 
     @Transactional
     public void updateProblem(Long id, ProblemFormDto dto) {
+        validateSingleUnitTag(dto.getTagIds());
         Problem problem = problemMapper.findById(id);
         if (problem == null) {
             throw new ResourceNotFoundException("문제를 찾을 수 없습니다: " + id);

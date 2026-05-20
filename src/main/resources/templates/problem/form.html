@@ -70,20 +70,28 @@
             <!-- 태그 선택 -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-3">태그 선택</label>
+                <div th:if="${tagError}"
+                     class="mb-2 px-3 py-2 bg-red-50 border border-red-200 rounded text-xs text-red-600"
+                     th:text="${tagError}"></div>
                 <div class="space-y-3">
                     <div th:each="entry : ${tagGroups}"
                          class="border border-gray-200 rounded-md p-3">
-                        <div class="text-xs font-semibold text-gray-500 mb-2"
-                             th:text="${entry.key == 'GRADE'      ? '학년'   :
-                                       (entry.key == 'SEMESTER'  ? '학기'   :
-                                       (entry.key == 'UNIT'      ? '대단원' :
-                                       (entry.key == 'SUB_UNIT'  ? '소단원' :
-                                       (entry.key == 'TYPE'      ? '문제유형' : '난이도'))))}">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xs font-semibold text-gray-500"
+                                  th:text="${entry.key == 'GRADE'      ? '학년'   :
+                                            (entry.key == 'SEMESTER'  ? '학기'   :
+                                            (entry.key == 'UNIT'      ? '대단원' :
+                                            (entry.key == 'SUB_UNIT'  ? '소단원' :
+                                            (entry.key == 'TYPE'      ? '문제유형' : '난이도'))))}">
+                            </span>
+                            <span th:if="${entry.key == 'UNIT'}"
+                                  class="text-xs text-gray-400">(하나만 선택)</span>
                         </div>
                         <div class="flex flex-wrap gap-3">
                             <label th:each="tag : ${entry.value}"
                                    class="flex items-center gap-1.5 cursor-pointer">
                                 <input type="checkbox" name="tagIds" th:value="${tag.id}"
+                                       th:attr="data-tag-type=${entry.key}"
                                        th:checked="${selectedTagIds != null and selectedTagIds.contains(tag.id)}"
                                        class="w-3.5 h-3.5 rounded accent-indigo-600"/>
                                 <span th:text="${tag.tagValue}" class="text-sm text-gray-700"></span>
@@ -131,6 +139,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     textarea.addEventListener('input', updatePreview);
     if (textarea.value) { updatePreview(); }
+
+    // 대단원 단일 선택 강제
+    const unitCheckboxes = document.querySelectorAll('input[data-tag-type="UNIT"]');
+    unitCheckboxes.forEach(function (cb) {
+        cb.addEventListener('change', function () {
+            if (this.checked) {
+                unitCheckboxes.forEach(function (other) {
+                    if (other !== cb) other.checked = false;
+                });
+            }
+        });
+    });
 });
 </script>
 </div>
