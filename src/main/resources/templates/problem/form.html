@@ -12,6 +12,11 @@
         <h1 class="text-xl font-bold text-gray-800 mb-6"
             th:text="${problem != null} ? '문제 수정' : '새 문제 등록'"></h1>
 
+        <!-- 서버측 태그 오류 배너 -->
+        <div th:if="${tagError}"
+             class="mb-4 px-4 py-3 bg-red-50 border border-red-300 rounded-lg text-sm text-red-700"
+             th:text="${tagError}"></div>
+
         <form th:action="${problem != null} ? @{/problem/{id}/edit(id=${problem.id})} : @{/problem/new}"
               th:object="${form}" method="post" class="space-y-6">
 
@@ -70,9 +75,6 @@
             <!-- 태그 선택 -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-3">태그 선택</label>
-                <div th:if="${tagError}"
-                     class="mb-2 px-3 py-2 bg-red-50 border border-red-200 rounded text-xs text-red-600"
-                     th:text="${tagError}"></div>
                 <div class="space-y-3">
                     <div th:each="entry : ${tagGroups}"
                          class="border border-gray-200 rounded-md p-3">
@@ -97,6 +99,10 @@
                                 <span th:text="${tag.tagValue}" class="text-sm text-gray-700"></span>
                             </label>
                         </div>
+                        <p th:if="${entry.key == 'UNIT'}" id="unitWarning"
+                           class="hidden mt-2 text-xs text-red-500">
+                            대단원은 하나만 선택할 수 있습니다. 이전 선택이 해제되었습니다.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -142,12 +148,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 대단원 단일 선택 강제
     const unitCheckboxes = document.querySelectorAll('input[data-tag-type="UNIT"]');
+    const unitWarning    = document.getElementById('unitWarning');
     unitCheckboxes.forEach(function (cb) {
         cb.addEventListener('change', function () {
             if (this.checked) {
+                let displaced = false;
                 unitCheckboxes.forEach(function (other) {
-                    if (other !== cb) other.checked = false;
+                    if (other !== cb && other.checked) {
+                        other.checked = false;
+                        displaced = true;
+                    }
                 });
+                if (displaced && unitWarning) {
+                    unitWarning.classList.remove('hidden');
+                    setTimeout(function () { unitWarning.classList.add('hidden'); }, 3000);
+                }
             }
         });
     });
