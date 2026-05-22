@@ -92,13 +92,13 @@ public class PdfService {
 
         // 문제 목록
         for (ExamSheetProblemDto p : problems) {
-            Paragraph numTitle = new Paragraph(p.getSortOrder() + ".  " + p.getTitle(), headerFont);
+            Paragraph numTitle = buildParagraph(p.getSortOrder() + ".  " + p.getTitle(), headerFont);
             numTitle.setSpacingBefore(15f);
             numTitle.setSpacingAfter(6f);
             document.add(numTitle);
 
             if (p.getContent() != null && !p.getContent().isBlank()) {
-                Paragraph content = new Paragraph(p.getContent(), bodyFont);
+                Paragraph content = buildParagraph(p.getContent(), bodyFont);
                 content.setIndentationLeft(20f);
                 content.setSpacingAfter(4f);
                 document.add(content);
@@ -119,14 +119,14 @@ public class PdfService {
         document.add(thickSeparator());
 
         for (ExamSheetProblemDto p : problems) {
-            Paragraph answerPara = new Paragraph(
-                    p.getSortOrder() + "번.  정답: " + p.getAnswer(), headerFont);
+            Paragraph answerPara = buildParagraph(
+                    p.getSortOrder() + "번.  정답: " + latexToText(p.getAnswer()), headerFont);
             answerPara.setSpacingBefore(12f);
             answerPara.setSpacingAfter(4f);
             document.add(answerPara);
 
             if (p.getExplanation() != null && !p.getExplanation().isBlank()) {
-                Paragraph explPara = new Paragraph("해설: " + p.getExplanation(), answerFont);
+                Paragraph explPara = buildParagraph("해설: " + p.getExplanation(), answerFont);
                 explPara.setIndentationLeft(20f);
                 explPara.setSpacingAfter(6f);
                 document.add(explPara);
@@ -137,6 +137,100 @@ public class PdfService {
     }
 
     // ── 헬퍼 ──────────────────────────────────────────────────────────────────
+
+    // latexToText 를 적용한 뒤 \n 으로 줄바꿈 처리
+    private static Paragraph buildParagraph(String raw, Font font) {
+        String text = latexToText(raw);
+        Paragraph p = new Paragraph();
+        p.setFont(font);
+        String[] lines = text.split("\n", -1);
+        for (int i = 0; i < lines.length; i++) {
+            if (i > 0) p.add(Chunk.NEWLINE);
+            p.add(new Chunk(lines[i], font));
+        }
+        return p;
+    }
+
+    private static String latexToText(String input) {
+        if (input == null || input.isBlank()) return "";
+        String s = input;
+
+        // 블록 수식 $$...$$ → 내용만
+        s = s.replaceAll("(?s)\\$\\$(.+?)\\$\\$", " $1 ");
+        // 인라인 수식 $...$ → 내용만
+        s = s.replaceAll("\\$([^$\\n]+)\\$", "$1");
+
+        // LaTeX 줄바꿈 \\ → 개행
+        s = s.replace("\\\\", "\n");
+
+        // \left \right 제거
+        s = s.replace("\\left(", "(").replace("\\left[", "[")
+             .replace("\\left|", "|").replace("\\left.", "")
+             .replace("\\right)", ")").replace("\\right]", "]")
+             .replace("\\right|", "|").replace("\\right.", "");
+
+        // 분수 \frac{a}{b}, \dfrac, \tfrac (중첩 처리 3회 반복)
+        for (int i = 0; i < 3; i++) {
+            s = s.replaceAll("\\\\[dt]?frac\\{([^{}]*)\\}\\{([^{}]*)\\}", "($1)/($2)");
+        }
+
+        // 루트 \sqrt[n]{x}, \sqrt{x}
+        s = s.replaceAll("\\\\sqrt\\[([^\\]]+)\\]\\{([^{}]*)\\}", "$1√($2)");
+        s = s.replaceAll("\\\\sqrt\\{([^{}]*)\\}", "√($1)");
+        s = s.replace("\\sqrt", "√");
+
+        // \text{...}
+        s = s.replaceAll("\\\\text\\{([^{}]*)\\}", "$1");
+
+        // 위첨자 ^{n} → ^n, 단순 숫자는 유니코드 변환
+        s = s.replaceAll("\\^\\{([^{}]+)\\}", "^($1)");
+        s = s.replace("^(2)", "²").replace("^(3)", "³").replace("^(4)", "⁴")
+             .replace("^(5)", "⁵").replace("^(6)", "⁶").replace("^(7)", "⁷")
+             .replace("^(8)", "⁸").replace("^(9)", "⁹").replace("^(0)", "⁰")
+             .replace("^2", "²").replace("^3", "³").replace("^4", "⁴");
+
+        // 아래첨자 _{n}
+        s = s.replaceAll("_\\{([^{}]+)\\}", "_$1");
+
+        // 그리스 문자
+        s = s.replace("\\alpha", "α").replace("\\beta", "β")
+             .replace("\\gamma", "γ").replace("\\Gamma", "Γ")
+             .replace("\\delta", "δ").replace("\\Delta", "Δ")
+             .replace("\\epsilon", "ε").replace("\\theta", "θ")
+             .replace("\\lambda", "λ").replace("\\mu", "μ")
+             .replace("\\pi", "π").replace("\\Pi", "Π")
+             .replace("\\sigma", "σ").replace("\\Sigma", "Σ")
+             .replace("\\omega", "ω").replace("\\phi", "φ");
+
+        // 연산자·기호
+        s = s.replace("\\leq", "≤").replace("\\geq", "≥")
+             .replace("\\neq", "≠").replace("\\ne", "≠")
+             .replace("\\times", "×").replace("\\div", "÷")
+             .replace("\\pm", "±").replace("\\cdot", "·")
+             .replace("\\cdots", "···").replace("\\infty", "∞")
+             .replace("\\therefore", "∴").replace("\\because", "∵")
+             .replace("\\cup", "∪").replace("\\cap", "∩")
+             .replace("\\in", "∈").replace("\\subset", "⊂")
+             .replace("\\circ", "∘");
+
+        // 공백 명령
+        s = s.replace("\\,", " ").replace("\\;", " ")
+             .replace("\\:", " ").replace("\\ ", " ").replace("\\!", "");
+
+        // 나머지 LaTeX 명령 일괄 제거 (\command)
+        s = s.replaceAll("\\\\[a-zA-Z]+\\*?\\s?", "");
+
+        // 중괄호 제거
+        s = s.replace("{", "").replace("}", "");
+
+        // 남은 $ 제거
+        s = s.replace("$", "");
+
+        // 다중 공백 정리
+        s = s.replaceAll("[ \t]+", " ").trim();
+
+        return s;
+    }
 
     private static PdfPCell noBorderCell(Phrase phrase, int alignment) {
         PdfPCell cell = new PdfPCell(phrase);
