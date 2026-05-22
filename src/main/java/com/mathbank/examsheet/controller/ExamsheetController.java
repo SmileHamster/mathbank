@@ -5,8 +5,10 @@ import com.mathbank.examsheet.dto.ExamSheetCreateDto;
 import com.mathbank.examsheet.dto.ExamSheetDetailDto;
 import com.mathbank.examsheet.dto.ExamSheetListDto;
 import com.mathbank.examsheet.service.ExamSheetService;
+import com.mathbank.examsheet.service.PdfService;
 import com.mathbank.problem.domain.Tag;
 import com.mathbank.problem.service.TagService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -26,6 +28,7 @@ import java.util.Map;
 public class ExamsheetController {
 
     private final ExamSheetService examSheetService;
+    private final PdfService pdfService;
     private final TagService tagService;
     private final MemberMapper memberMapper;
 
@@ -69,6 +72,16 @@ public class ExamsheetController {
         ExamSheetDetailDto detail = examSheetService.getExamSheetDetail(id);
         model.addAttribute("examSheet", detail);
         return "examsheet/detail";
+    }
+
+    @GetMapping("/{id}/pdf")
+    public void pdf(@PathVariable Long id, HttpServletResponse response) throws Exception {
+        pdfService.generateExamPdf(id, response, false);
+    }
+
+    @GetMapping("/{id}/pdf/answer")
+    public void pdfAnswer(@PathVariable Long id, HttpServletResponse response) throws Exception {
+        pdfService.generateExamPdf(id, response, true);
     }
 
     @PostMapping("/{id}/delete")

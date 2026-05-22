@@ -1,0 +1,204 @@
+package com.mathbank.examsheet.service;
+
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.*;
+import com.lowagie.text.pdf.draw.LineSeparator;
+import com.mathbank.examsheet.dto.ExamSheetDetailDto;
+import com.mathbank.examsheet.dto.ExamSheetProblemDto;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
+
+import java.awt.Color;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class PdfService {
+
+    private final ExamSheetService examSheetService;
+
+    private BaseFont baseFont;
+
+    @PostConstruct
+    public void init() {
+        try {
+            ClassPathResource fontResource = new ClassPathResource("fonts/NanumGothic.ttf");
+            byte[] fontBytes = fontResource.getInputStream().readAllBytes();
+            baseFont = BaseFont.createFont(
+                    "NanumGothic.ttf",
+                    BaseFont.IDENTITY_H,
+                    BaseFont.EMBEDDED,
+                    true, fontBytes, null
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("PDF 폰트 초기화 실패", e);
+        }
+    }
+
+    public void generateExamPdf(Long examSheetId, HttpServletResponse response, boolean includeAnswer) throws Exception {
+        ExamSheetDetailDto examSheet = examSheetService.getExamSheetDetail(examSheetId);
+        List<ExamSheetProblemDto> problems = examSheet.getProblems();
+
+        Font titleFont  = new Font(baseFont, 16, Font.BOLD);
+        Font headerFont = new Font(baseFont, 12, Font.BOLD);
+        Font bodyFont   = new Font(baseFont, 11);
+        Font answerFont = new Font(baseFont, 11, Font.NORMAL, new Color(60, 60, 60));
+
+        String fileName = includeAnswer
+                ? "examsheet_" + examSheetId + "_answer.pdf"
+                : "examsheet_" + examSheetId + ".pdf";
+        response.setContentType("application/pdf");
+        response.setHeader("Content-Disposition", "inline; filename=\"" + fileName + "\"");
+
+        Document document = new Document(PageSize.A4, 60f, 60f, 70f, 50f);
+        PdfWriter writer = PdfWriter.getInstance(document, response.getOutputStream());
+        writer.setPageEvent(new PageNumberEvent(baseFont));
+        document.open();
+
+        if (includeAnswer) {
+            buildAnswerSheet(document, examSheet, problems, titleFont, headerFont, bodyFont, answerFont);
+        } else {
+            buildQuestionSheet(document, examSheet, problems, titleFont, headerFont, bodyFont);
+        }
+
+        document.close();
+    }
+
+    // ── 문제지 ────────────────────────────────────────────────────────────────
+
+    private void buildQuestionSheet(Document document, ExamSheetDetailDto examSheet,
+                                    List<ExamSheetProblemDto> problems,
+                                    Font titleFont, Font headerFont, Font bodyFont) throws DocumentException {
+
+        // 머리말 테이블
+        PdfPTable header = new PdfPTable(2);
+        header.setWidthPercentage(100f);
+        header.setSpacingAfter(6f);
+
+        String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+
+        header.addCell(noBorderCell(new Phrase(examSheet.getName(), titleFont), Element.ALIGN_LEFT));
+        header.addCell(noBorderCell(new Phrase("날짜: " + dateStr, bodyFont), Element.ALIGN_RIGHT));
+        header.addCell(noBorderCell(new Phrase("학년/반: _______________", bodyFont), Element.ALIGN_LEFT));
+        header.addCell(noBorderCell(new Phrase("이름: _______________", bodyFont), Element.ALIGN_RIGHT));
+
+        document.add(header);
+        document.add(thickSeparator());
+
+        // 문제 목록
+        for (ExamSheetProblemDto p : problems) {
+            Paragraph numTitle = new Paragraph(p.getSortOrder() + ".  " + p.getTitle(), headerFont);
+            numTitle.setSpacingBefore(15f);
+            numTitle.setSpacingAfter(6f);
+            document.add(numTitle);
+
+            if (p.getContent() != null && !p.getContent().isBlank()) {
+                Paragraph content = new Paragraph(p.getContent(), bodyFont);
+                content.setIndentationLeft(20f);
+                content.setSpacingAfter(4f);
+                document.add(content);
+            }
+        }
+    }
+
+    // ── 답안지 ────────────────────────────────────────────────────────────────
+
+    private void buildAnswerSheet(Document document, ExamSheetDetailDto examSheet,
+                                  List<ExamSheetProblemDto> problems,
+                                  Font titleFont, Font headerFont, Font bodyFont, Font answerFont) throws DocumentException {
+
+        Paragraph title = new Paragraph(examSheet.getName() + "  정답 및 해설", titleFont);
+        title.setAlignment(Element.ALIGN_CENTER);
+        title.setSpacingAfter(8f);
+        document.add(title);
+        document.add(thickSeparator());
+
+        for (ExamSheetProblemDto p : problems) {
+            Paragraph answerPara = new Paragraph(
+                    p.getSortOrder() + "번.  정답: " + p.getAnswer(), headerFont);
+            answerPara.setSpacingBefore(12f);
+            answerPara.setSpacingAfter(4f);
+            document.add(answerPara);
+
+            if (p.getExplanation() != null && !p.getExplanation().isBlank()) {
+                Paragraph explPara = new Paragraph("해설: " + p.getExplanation(), answerFont);
+                explPara.setIndentationLeft(20f);
+                explPara.setSpacingAfter(6f);
+                document.add(explPara);
+            }
+
+            document.add(thinSeparator());
+        }
+    }
+
+    // ── 헬퍼 ──────────────────────────────────────────────────────────────────
+
+    private static PdfPCell noBorderCell(Phrase phrase, int alignment) {
+        PdfPCell cell = new PdfPCell(phrase);
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setPadding(4f);
+        cell.setHorizontalAlignment(alignment);
+        return cell;
+    }
+
+    private static Chunk thickSeparator() {
+        LineSeparator sep = new LineSeparator(1f, 100f, new Color(80, 80, 80), Element.ALIGN_CENTER, -4f);
+        return new Chunk(sep);
+    }
+
+    private static Chunk thinSeparator() {
+        LineSeparator sep = new LineSeparator(0.5f, 100f, new Color(200, 200, 200), Element.ALIGN_CENTER, -2f);
+        return new Chunk(sep);
+    }
+
+    // ── 페이지 번호 이벤트 ────────────────────────────────────────────────────
+
+    private static class PageNumberEvent extends PdfPageEventHelper {
+
+        private final BaseFont bf;
+        private PdfTemplate totalTemplate;
+
+        PageNumberEvent(BaseFont bf) {
+            this.bf = bf;
+        }
+
+        @Override
+        public void onOpenDocument(PdfWriter writer, Document document) {
+            totalTemplate = writer.getDirectContent().createTemplate(30, 16);
+        }
+
+        @Override
+        public void onEndPage(PdfWriter writer, Document document) {
+            PdfContentByte cb  = writer.getDirectContent();
+            float midX         = document.getPageSize().getWidth() / 2;
+            float bottomY      = document.getPageSize().getBottom() + 20f;
+            float fontSize     = 9f;
+
+            String current = writer.getPageNumber() + " / ";
+            float currentW = bf.getWidthPoint(current, fontSize);
+
+            cb.beginText();
+            cb.setFontAndSize(bf, fontSize);
+            cb.setTextMatrix(midX - currentW, bottomY);
+            cb.showText(current);
+            cb.endText();
+
+            // 전체 페이지 수는 문서 닫힐 때 template에 채워짐
+            cb.addTemplate(totalTemplate, midX, bottomY);
+        }
+
+        @Override
+        public void onCloseDocument(PdfWriter writer, Document document) {
+            totalTemplate.beginText();
+            totalTemplate.setFontAndSize(bf, 9f);
+            totalTemplate.setTextMatrix(0, 0);
+            totalTemplate.showText(String.valueOf(writer.getPageNumber() - 1));
+            totalTemplate.endText();
+        }
+    }
+}
