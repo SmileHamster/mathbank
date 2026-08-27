@@ -115,13 +115,16 @@ CREATE TABLE exam_sheet_problem (
 -- 7. student
 -- ============================================================
 CREATE TABLE student (
-    id         BIGINT       NOT NULL AUTO_INCREMENT COMMENT '학생 PK',
-    name       VARCHAR(100) NOT NULL               COMMENT '학생 이름',
-    grade      VARCHAR(20)  NULL                   COMMENT '학년 (예: 중2, 고1)',
-    memo       VARCHAR(500) NULL                   COMMENT '메모',
-    created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일시',
+    id           BIGINT       NOT NULL AUTO_INCREMENT COMMENT '학생 PK',
+    name         VARCHAR(100) NOT NULL               COMMENT '학생 이름',
+    grade_tag_id BIGINT       NULL                   COMMENT '학년 태그 tag.id',
+    memo         VARCHAR(500) NULL                   COMMENT '메모',
+    created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '등록일시',
     PRIMARY KEY (id),
-    KEY idx_student_name (name)
+    KEY idx_student_name (name),
+    KEY idx_student_grade_tag (grade_tag_id),
+    CONSTRAINT fk_student_grade_tag
+        FOREIGN KEY (grade_tag_id) REFERENCES tag (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='학생';
 
 -- ============================================================

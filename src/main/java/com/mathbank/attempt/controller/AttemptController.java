@@ -9,6 +9,7 @@ import com.mathbank.attempt.service.StudentService;
 import com.mathbank.auth.mapper.MemberMapper;
 import com.mathbank.examsheet.dto.ExamSheetListDto;
 import com.mathbank.examsheet.service.ExamSheetService;
+import com.mathbank.problem.service.TagService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -28,6 +29,7 @@ public class AttemptController {
     private final StudentService studentService;
     private final AttemptService attemptService;
     private final ExamSheetService examSheetService;
+    private final TagService tagService;
     private final MemberMapper memberMapper;
 
     @GetMapping("/students")
@@ -39,12 +41,14 @@ public class AttemptController {
     @GetMapping("/students/new")
     public String newForm(Model model) {
         model.addAttribute("form", new StudentFormDto());
+        addGradeTags(model);
         return "attempt/student-form";
     }
 
     @PostMapping("/students/new")
-    public String create(@Valid @ModelAttribute("form") StudentFormDto form, BindingResult bindingResult) {
+    public String create(@Valid @ModelAttribute("form") StudentFormDto form, BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
+            addGradeTags(model);
             return "attempt/student-form";
         }
         Long id = studentService.createStudent(form);
@@ -65,10 +69,11 @@ public class AttemptController {
         Student student = studentService.getStudent(id);
         StudentFormDto form = new StudentFormDto();
         form.setName(student.getName());
-        form.setGrade(student.getGrade());
+        form.setGradeTagId(student.getGradeTagId());
         form.setMemo(student.getMemo());
         model.addAttribute("studentId", id);
         model.addAttribute("form", form);
+        addGradeTags(model);
         return "attempt/student-form";
     }
 
@@ -79,6 +84,7 @@ public class AttemptController {
                          Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("studentId", id);
+            addGradeTags(model);
             return "attempt/student-form";
         }
         studentService.updateStudent(id, form);
@@ -122,5 +128,9 @@ public class AttemptController {
     private Long getMemberId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return memberMapper.findByUsername(auth.getName()).getId();
+    }
+
+    private void addGradeTags(Model model) {
+        model.addAttribute("gradeTags", tagService.getTagsGroupedByType().getOrDefault("GRADE", List.of()));
     }
 }

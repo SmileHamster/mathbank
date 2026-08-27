@@ -32,7 +32,7 @@ public class StudentService {
     public Long createStudent(StudentFormDto form) {
         Student student = Student.builder()
                 .name(form.getName())
-                .grade(form.getGrade())
+                .gradeTagId(form.getGradeTagId())
                 .memo(form.getMemo())
                 .build();
         studentMapper.insertStudent(student);
@@ -45,7 +45,7 @@ public class StudentService {
         Student student = Student.builder()
                 .id(id)
                 .name(form.getName())
-                .grade(form.getGrade())
+                .gradeTagId(form.getGradeTagId())
                 .memo(form.getMemo())
                 .build();
         studentMapper.updateStudent(student);

@@ -42,7 +42,7 @@
                            th:text="${student.name}"
                            class="text-gray-800 hover:text-indigo-600"></a>
                     </td>
-                    <td class="px-4 py-3 text-gray-600" th:text="${student.grade}"></td>
+                    <td class="px-4 py-3 text-gray-600" th:text="${student.gradeName}"></td>
                     <td class="px-4 py-3 text-gray-500 truncate max-w-xs" th:text="${student.memo}"></td>
                     <td class="px-4 py-3 text-gray-500"
                         th:text="${#temporals.format(student.createdAt, 'yyyy-MM-dd')}"></td>

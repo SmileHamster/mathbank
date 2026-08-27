@@ -12,7 +12,7 @@ public class StudentFormDto {
     @NotBlank(message = "이름을 입력하세요.")
     private String name;
 
-    private String grade;
+    private Long gradeTagId;
 
     private String memo;
 }

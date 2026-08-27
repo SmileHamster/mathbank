@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class ExamSheetListDto {
     private Long id;
     private String name;
+    private String gradeName;
     private Integer totalCount;
     private LocalDateTime createdAt;
 }

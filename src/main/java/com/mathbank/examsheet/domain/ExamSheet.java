@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class ExamSheet {
     private Long id;
     private String name;
+    private Long gradeTagId;
     private Integer totalCount;
     private Long createdBy;
     private LocalDateTime createdAt;

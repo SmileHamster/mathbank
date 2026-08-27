@@ -37,9 +37,9 @@ Member          : id, username, password, role(ADMIN/STUDENT), created_at
 Problem         : id, title, content(LaTeX 텍스트), answer, explanation, created_at
 Tag             : id, tag_type(GRADE/CURRICULUM/TYPE/DIFFICULTY), tag_value, sort_order
 ProblemTag      : problem_id, tag_id  ← 복합 PK, 복합 인덱스
-ExamSheet       : id, name, created_by, created_at, total_count
+ExamSheet       : id, name, grade_tag_id, created_by, created_at, total_count
 ExamSheetProblem: exam_sheet_id, problem_id, sort_order  ← 복합 PK
-Student         : id, name, grade, created_at
+Student         : id, name, grade_tag_id, memo, created_at
 StudentAnswer   : id, student_id, exam_sheet_id, problem_id, is_correct, submitted_at
 ```
 

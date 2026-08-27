@@ -12,7 +12,8 @@ import java.time.LocalDateTime;
 public class Student {
     private Long id;
     private String name;
-    private String grade;
+    private Long gradeTagId;
+    private String gradeName;
     private String memo;
     private LocalDateTime createdAt;
 }

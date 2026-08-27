@@ -26,8 +26,8 @@
 
     <insert id="insertExamSheet" parameterType="com.mathbank.examsheet.domain.ExamSheet"
             useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO exam_sheet (name, total_count, created_by)
-        VALUES (#{name}, #{totalCount}, #{createdBy})
+        INSERT INTO exam_sheet (name, grade_tag_id, total_count, created_by)
+        VALUES (#{name}, #{gradeTagId}, #{totalCount}, #{createdBy})
     </insert>
 
     <insert id="insertExamSheetProblems">
@@ -38,10 +38,12 @@
     </insert>
 
     <select id="findAll" resultType="com.mathbank.examsheet.dto.ExamSheetListDto">
-        SELECT id, name, total_count, created_at
-        FROM exam_sheet
-        WHERE created_by = #{createdBy}
-        ORDER BY created_at DESC, id DESC
+        SELECT es.id, es.name, es.total_count, es.created_at,
+               t.tag_value AS grade_name
+        FROM exam_sheet es
+        LEFT JOIN tag t ON es.grade_tag_id = t.id
+        WHERE es.created_by = #{createdBy}
+        ORDER BY es.created_at DESC, es.id DESC
     </select>
 
     <select id="findDetailById" resultMap="ExamSheetDetailResultMap">

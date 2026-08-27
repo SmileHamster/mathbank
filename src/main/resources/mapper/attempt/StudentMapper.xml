@@ -5,25 +5,27 @@
 
     <insert id="insertStudent" parameterType="com.mathbank.attempt.domain.Student"
             useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO student (name, grade, memo)
-        VALUES (#{name}, #{grade}, #{memo})
+        INSERT INTO student (name, grade_tag_id, memo)
+        VALUES (#{name}, #{gradeTagId}, #{memo})
     </insert>
 
     <select id="findAll" resultType="com.mathbank.attempt.domain.Student">
-        SELECT id, name, grade, memo, created_at
-        FROM student
-        ORDER BY created_at DESC, id DESC
+        SELECT s.id, s.name, s.grade_tag_id, t.tag_value AS grade_name, s.memo, s.created_at
+        FROM student s
+        LEFT JOIN tag t ON s.grade_tag_id = t.id
+        ORDER BY s.created_at DESC, s.id DESC
     </select>
 
     <select id="findById" resultType="com.mathbank.attempt.domain.Student">
-        SELECT id, name, grade, memo, created_at
-        FROM student
-        WHERE id = #{id}
+        SELECT s.id, s.name, s.grade_tag_id, t.tag_value AS grade_name, s.memo, s.created_at
+        FROM student s
+        LEFT JOIN tag t ON s.grade_tag_id = t.id
+        WHERE s.id = #{id}
     </select>
 
     <update id="updateStudent" parameterType="com.mathbank.attempt.domain.Student">
         UPDATE student
-        SET name = #{name}, grade = #{grade}, memo = #{memo}
+        SET name = #{name}, grade_tag_id = #{gradeTagId}, memo = #{memo}
         WHERE id = #{id}
     </update>
 

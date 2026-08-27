@@ -77,6 +77,7 @@ public class ExamSheetService {
 
         ExamSheet examSheet = ExamSheet.builder()
                 .name(dto.getName())
+                .gradeTagId(dto.getGradeTagId())
                 .totalCount(selected.size())
                 .createdBy(memberId)
                 .build();
