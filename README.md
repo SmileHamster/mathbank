@@ -211,6 +211,10 @@ StudentAnswer   : id, student_id, exam_sheet_id, problem_id, is_correct, submitt
 | 태그 6축 설계 | 수학교육과정 분류 체계(교육과정 문서) 직접 인용, 현장 강사 경험 기반 |
 | 모놀리식 선택 | 4주 완성 우선, 도메인 경계는 패키지 수준으로 미리 분리 |
 | MSA 전환 계획 | 2호 프로젝트에서 problem / examsheet / attempt / auth 4개 서비스로 분리 예정 |
+| PDF 수식 렌더링 — 텍스트 치환 선택 | KaTeX는 JS 라이브러리로 JVM에서 직접 실행 불가. 브라우저-서버 런타임 경계 문제. `latexToText()` 정규식 치환(√, ², ×, ≤ 등 유니코드 변환)으로 타협. 대안인 headless Chrome 서버 방식은 구현 비용 과다로 포트폴리오 범위 초과 판단 |
+| HWP 대신 PDF 선택 | Java용 HWP 라이브러리(poi-ooxml 등)는 HWP 형식 지원 미성숙, 파싱/생성 모두 불안정. SI 현장에서도 PDF가 범용적이며, OpenPDF 기반 서버 사이드 PDF 생성은 백엔드 기술로 더 명확히 어필 가능 |
+| 페이지 번호 N/M — 2-pass 방식 | `PdfPageEventHelper.onEndPage()`에서 현재 페이지 기록 + `PdfTemplate` 플레이스홀더 삽입, `onCloseDocument()`에서 전체 페이지 수를 역으로 채움. 단순 순방향 출력으로는 총 페이지를 미리 알 수 없어 2-pass가 필수 |
+| 한글 폰트 임베딩 방식 | `ClassPathResource`로 NanumGothic.ttf를 byte[]로 로드 후 `BaseFont.IDENTITY_H + EMBEDDED`로 등록. jar 내 완전 자급 구조로 서버 OS 폰트 환경에 의존하지 않음 |
 
 ---
 
@@ -232,6 +236,38 @@ StudentAnswer   : id, student_id, exam_sheet_id, problem_id, is_correct, submitt
 
 이후 같은 도메인을 MSA + eGov 5.0으로 재구성하는 2호 프로젝트를 계획하고 있으며,
 그것을 염두에 두고 1호에서도 패키지를 서비스 경계 기준으로 미리 분리해 두었다.
+
+---
+
+## PDF 출력 기술 의사결정 히스토리
+
+### KaTeX와 OpenPDF의 런타임 경계 문제
+
+브라우저에서 수식이 KaTeX로 잘 렌더링되기 때문에, 처음에는 PDF에도 같은 방식을 쓸 수 있다고 가정하기 쉽다.
+그러나 KaTeX는 **JS 라이브러리**로 브라우저(또는 Node.js) 런타임에서만 동작한다.
+OpenPDF는 **JVM 위에서 실행되는 Java 라이브러리**다. 두 런타임은 완전히 분리되어 있다.
+
+따라서 Java 서버 코드에서 KaTeX를 직접 호출하는 것은 불가능하다.
+
+**검토한 대안 3가지**
+
+| 방식 | 설명 | 판단 |
+|------|------|------|
+| 텍스트 치환 (채택) | `latexToText()` 정규식으로 LaTeX → 유니코드 기호 변환 (`√`, `²`, `×`, `≤` 등) | 수식 품질 제한적이나 포트폴리오 범위 내 합리적 타협 |
+| Headless Chrome | 서버에서 Chromium을 실행해 KaTeX를 렌더링한 HTML을 PDF로 변환 | 서버 환경 구성 복잡, 운영 비용 증가, 4주 범위 초과 |
+| OZ Report 등 리포팅 툴 | 자체 렌더링 엔진 탑재, DB 연동 리포트 생성 가능 | JS 라이브러리 불가는 동일 (서버 사이드 렌더러라서). SI 현장 외부 라이선스 비용 |
+
+**면접 어필 포인트**: 구현 한계를 인지하고 대안을 비교 분석한 뒤 범위에 맞는 선택을 설명할 수 있다는 점 자체가 경험으로 어필 가능하다. "완벽한 구현"보다 "트레이드오프를 이해한 의사결정"이 면접에서 더 유의미하다.
+
+### HWP vs PDF
+
+현장 강사 시절 사용한 형식은 hwp(한글)다. 그러나 Java에서 HWP를 프로그래밍으로 생성하는 것은 현실적으로 어렵다.
+- HWP 형식 규격이 비공개 (일부 공개되어 있으나 불완전)
+- Java용 HWP 라이브러리가 없거나 불안정
+- poi-ooxml 계열에 HWP 지원 없음
+
+PDF는 SI 프로젝트에서도 공문서·계약서 출력에 실제로 사용하는 형식이며,
+서버 사이드 PDF 생성(OpenPDF, iText 계열) 경험은 백엔드 기술로 명확히 어필 가능하다.
 
 ---
 
