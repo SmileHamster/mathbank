@@ -39,6 +39,19 @@
         WHERE student_id = #{studentId} AND exam_sheet_id = #{examSheetId}
     </delete>
 
+    <select id="findAccuracyByTagType" resultType="com.mathbank.attempt.dto.TagAccuracyDto">
+        SELECT
+            t.tag_value AS label,
+            COUNT(*) AS total_count,
+            SUM(sa.is_correct) AS correct_count
+        FROM student_answer sa
+        INNER JOIN problem_tag pt ON sa.problem_id = pt.problem_id
+        INNER JOIN tag t ON pt.tag_id = t.id AND t.tag_type = #{tagType}
+        WHERE sa.student_id = #{studentId}
+        GROUP BY t.id, t.tag_value, t.sort_order
+        ORDER BY t.sort_order ASC
+    </select>
+
     <insert id="insertAnswers">
         INSERT INTO student_answer (student_id, exam_sheet_id, problem_id, is_correct) VALUES
         <foreach collection="answers" item="a" separator=",">

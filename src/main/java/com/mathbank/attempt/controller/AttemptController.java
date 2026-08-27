@@ -61,6 +61,8 @@ public class AttemptController {
         List<StudentAttemptSummaryDto> summaries = attemptService.getAttemptSummaries(id);
         model.addAttribute("student", student);
         model.addAttribute("summaries", summaries);
+        model.addAttribute("unitAccuracy", attemptService.getAccuracyByTagType(id, "UNIT"));
+        model.addAttribute("difficultyAccuracy", attemptService.getAccuracyByTagType(id, "DIFFICULTY"));
         return "attempt/student-detail";
     }
 

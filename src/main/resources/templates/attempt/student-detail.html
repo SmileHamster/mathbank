@@ -28,7 +28,7 @@
         </div>
     </div>
 
-    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden mb-6">
         <table class="w-full text-sm">
             <thead class="bg-gray-50 border-b border-gray-200">
                 <tr>
@@ -61,6 +61,87 @@
         </table>
     </div>
 
+    <!-- 통계 -->
+    <div th:if="${!#lists.isEmpty(summaries)}">
+        <h2 class="text-sm font-semibold text-gray-500 mb-3">성적 통계</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <p class="text-xs font-medium text-gray-500 mb-2">전체 정답률</p>
+                <div class="h-52"><canvas id="overallChart"></canvas></div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <p class="text-xs font-medium text-gray-500 mb-2">단원별 정답률</p>
+                <div class="h-52"><canvas id="unitChart"></canvas></div>
+            </div>
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <p class="text-xs font-medium text-gray-500 mb-2">난이도별 정답률</p>
+                <div class="h-52"><canvas id="difficultyChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div layout:fragment="scripts">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script th:inline="javascript">
+document.addEventListener("DOMContentLoaded", function () {
+    const summaries         = /*[[${summaries}]]*/ [];
+    const unitAccuracy       = /*[[${unitAccuracy}]]*/ [];
+    const difficultyAccuracy = /*[[${difficultyAccuracy}]]*/ [];
+
+    if (!summaries.length) return;
+
+    function accuracyRates(list) {
+        return list.map(function (a) {
+            return a.totalCount ? Math.round(a.correctCount / a.totalCount * 100) : 0;
+        });
+    }
+
+    const totalCount   = summaries.reduce(function (sum, s) { return sum + s.totalCount; }, 0);
+    const correctCount = summaries.reduce(function (sum, s) { return sum + s.correctCount; }, 0);
+
+    new Chart(document.getElementById('overallChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['정답', '오답'],
+            datasets: [{
+                data: [correctCount, totalCount - correctCount],
+                backgroundColor: ['#4f46e5', '#e5e7eb']
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+        }
+    });
+
+    new Chart(document.getElementById('unitChart'), {
+        type: 'bar',
+        data: {
+            labels: unitAccuracy.map(function (a) { return a.label; }),
+            datasets: [{ label: '정답률(%)', data: accuracyRates(unitAccuracy), backgroundColor: '#4f46e5' }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, max: 100 } },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    new Chart(document.getElementById('difficultyChart'), {
+        type: 'bar',
+        data: {
+            labels: difficultyAccuracy.map(function (a) { return a.label; }),
+            datasets: [{ label: '정답률(%)', data: accuracyRates(difficultyAccuracy), backgroundColor: '#4f46e5' }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true, max: 100 } },
+            plugins: { legend: { display: false } }
+        }
+    });
+});
+</script>
 </div>
 </body>
 </html>

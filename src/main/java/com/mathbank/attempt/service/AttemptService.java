@@ -3,6 +3,7 @@ package com.mathbank.attempt.service;
 import com.mathbank.attempt.domain.StudentAnswer;
 import com.mathbank.attempt.dto.AttemptProblemDto;
 import com.mathbank.attempt.dto.StudentAttemptSummaryDto;
+import com.mathbank.attempt.dto.TagAccuracyDto;
 import com.mathbank.attempt.mapper.AttemptMapper;
 import com.mathbank.common.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,10 @@ public class AttemptService {
 
     public List<StudentAttemptSummaryDto> getAttemptSummaries(Long studentId) {
         return attemptMapper.findSummariesByStudent(studentId);
+    }
+
+    public List<TagAccuracyDto> getAccuracyByTagType(Long studentId, String tagType) {
+        return attemptMapper.findAccuracyByTagType(studentId, tagType);
     }
 
     public List<AttemptProblemDto> getAttemptProblems(Long studentId, Long examSheetId) {
