@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title th:text="${student.name} + ' - 학생 상세'">학생 상세</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <div class="flex items-center justify-between mb-4">
+        <div>
+            <h1 class="text-xl font-bold text-gray-800" th:text="${student.name}"></h1>
+            <p class="text-sm text-gray-500 mt-1">
+                <span th:if="${student.grade}" th:text="${student.grade}"></span>
+                <span th:if="${student.memo}" th:text="'· ' + ${student.memo}"></span>
+            </p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a th:href="@{/attempt/students/{id}/record(id=${student.id})}"
+               class="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors">
+                응시 기록 입력
+            </a>
+            <a th:href="@{/attempt/students/{id}/edit(id=${student.id})}"
+               class="px-4 py-2 bg-white text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+                수정
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="px-4 py-3 text-left text-gray-600 font-medium">시험지</th>
+                    <th class="px-4 py-3 text-left text-gray-600 font-medium w-32">점수</th>
+                    <th class="px-4 py-3 text-left text-gray-600 font-medium w-32">응시일</th>
+                    <th class="px-4 py-3 text-center text-gray-600 font-medium w-24">관리</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(summaries)}">
+                    <td colspan="4" class="px-4 py-12 text-center text-gray-400">
+                        응시 기록이 없습니다.
+                    </td>
+                </tr>
+                <tr th:each="s : ${summaries}" class="border-b border-gray-100 hover:bg-gray-50">
+                    <td class="px-4 py-3 text-gray-800" th:text="${s.examSheetName}"></td>
+                    <td class="px-4 py-3 text-gray-600"
+                        th:text="${s.correctCount} + ' / ' + ${s.totalCount}"></td>
+                    <td class="px-4 py-3 text-gray-500"
+                        th:text="${#temporals.format(s.submittedAt, 'yyyy-MM-dd')}"></td>
+                    <td class="px-4 py-3 text-center">
+                        <a th:href="@{/attempt/students/{id}/record/{esId}(id=${student.id},esId=${s.examSheetId})}"
+                           class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50">
+                            수정
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mathbank.attempt.mapper.AttemptMapper">
+
+    <select id="findSummariesByStudent" resultType="com.mathbank.attempt.dto.StudentAttemptSummaryDto">
+        SELECT
+            es.id            AS exam_sheet_id,
+            es.name          AS exam_sheet_name,
+            es.total_count   AS total_count,
+            SUM(sa.is_correct) AS correct_count,
+            MAX(sa.submitted_at) AS submitted_at
+        FROM student_answer sa
+        INNER JOIN exam_sheet es ON sa.exam_sheet_id = es.id
+        WHERE sa.student_id = #{studentId}
+        GROUP BY es.id, es.name, es.total_count
+        ORDER BY submitted_at DESC
+    </select>
+
+    <select id="findAttemptProblems" resultType="com.mathbank.attempt.dto.AttemptProblemDto">
+        SELECT
+            esp.problem_id AS problem_id,
+            esp.sort_order AS sort_order,
+            p.title        AS title,
+            p.content      AS content,
+            sa.is_correct  AS is_correct
+        FROM exam_sheet_problem esp
+        INNER JOIN problem p ON esp.problem_id = p.id
+        LEFT JOIN student_answer sa
+            ON sa.problem_id = esp.problem_id
+           AND sa.exam_sheet_id = esp.exam_sheet_id
+           AND sa.student_id = #{studentId}
+        WHERE esp.exam_sheet_id = #{examSheetId}
+        ORDER BY esp.sort_order ASC
+    </select>
+
+    <delete id="deleteAnswers">
+        DELETE FROM student_answer
+        WHERE student_id = #{studentId} AND exam_sheet_id = #{examSheetId}
+    </delete>
+
+    <insert id="insertAnswers">
+        INSERT INTO student_answer (student_id, exam_sheet_id, problem_id, is_correct) VALUES
+        <foreach collection="answers" item="a" separator=",">
+            (#{a.studentId}, #{a.examSheetId}, #{a.problemId}, #{a.isCorrect})
+        </foreach>
+    </insert>
+
+</mapper>

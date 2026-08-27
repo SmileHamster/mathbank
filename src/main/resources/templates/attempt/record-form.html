@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/default}">
+<head>
+    <title>응시 기록 입력</title>
+</head>
+<body>
+<div layout:fragment="content">
+
+    <h1 class="text-xl font-bold text-gray-800 mb-1">응시 기록 입력</h1>
+    <p class="text-sm text-gray-500 mb-6">
+        <span th:text="${student.name}"></span> 학생 — 문제별로 정답 여부를 체크하세요.
+    </p>
+
+    <form th:action="@{/attempt/students/{id}/record/{esId}(id=${student.id},esId=${examSheetId})}"
+          method="post" class="max-w-3xl">
+
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-gray-600 font-medium w-14">번호</th>
+                        <th class="px-4 py-3 text-left text-gray-600 font-medium">문제</th>
+                        <th class="px-4 py-3 text-center text-gray-600 font-medium w-20">정답</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${problems}" class="border-b border-gray-100">
+                        <td class="px-4 py-3 text-gray-500" th:text="${p.sortOrder}"></td>
+                        <td class="px-4 py-3 text-gray-800">
+                            <span th:text="${p.title}"></span>
+                            <input type="hidden" name="allProblemIds" th:value="${p.problemId}"/>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <input type="checkbox" name="correctProblemIds" th:value="${p.problemId}"
+                                   th:checked="${p.isCorrect != null and p.isCorrect}"
+                                   class="w-4 h-4 rounded accent-indigo-600"/>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex items-center gap-3 pt-4">
+            <button type="submit"
+                    class="px-5 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition-colors">
+                저장
+            </button>
+            <a th:href="@{/attempt/students/{id}(id=${student.id})}"
+               class="px-5 py-2 bg-white text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors">
+                취소
+            </a>
+        </div>
+    </form>
+
+</div>
+</body>
+</html>
