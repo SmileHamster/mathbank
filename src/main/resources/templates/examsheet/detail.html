@@ -69,6 +69,8 @@
             <!-- 본문 (KaTeX 렌더링) -->
             <div class="text-sm text-gray-700 leading-relaxed mb-3"
                  th:text="${problem.content}"></div>
+            <img th:if="${problem.imagePath != null}" th:src="@{${problem.imagePath}}"
+                 class="mb-3 max-w-sm border border-gray-200 rounded-md"/>
 
             <!-- 정답 토글 -->
             <div class="border-t border-gray-100 pt-3">

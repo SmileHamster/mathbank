@@ -15,6 +15,7 @@ public class ProblemDetailDto {
     private Long id;
     private String title;
     private String content;
+    private String imagePath;
     private String answer;
     private String explanation;
     private Long createdBy;

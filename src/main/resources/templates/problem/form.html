@@ -18,7 +18,7 @@
              th:text="${tagError}"></div>
 
         <form th:action="${problem != null} ? @{/problem/{id}/edit(id=${problem.id})} : @{/problem/new}"
-              th:object="${form}" method="post" class="space-y-6">
+              th:object="${form}" method="post" enctype="multipart/form-data" class="space-y-6">
 
             <!-- 제목 -->
             <div>
@@ -50,6 +50,21 @@
                     <div id="contentPreview"
                          class="min-h-12 p-3 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-700 whitespace-pre-wrap"></div>
                 </div>
+            </div>
+
+            <!-- 그림/도형 이미지 -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">그림/도형 이미지</label>
+                <div th:if="${problem != null and problem.imagePath != null}" class="mb-2">
+                    <img th:src="@{${problem.imagePath}}" class="max-w-xs border border-gray-200 rounded-md"/>
+                    <label class="flex items-center gap-1.5 mt-1 cursor-pointer">
+                        <input type="checkbox" th:field="*{removeImage}" class="w-3.5 h-3.5 rounded accent-red-600"/>
+                        <span class="text-xs text-red-500">이미지 삭제</span>
+                    </label>
+                </div>
+                <input type="file" th:field="*{image}" accept="image/*"
+                       class="w-full text-sm text-gray-600 file:mr-3 file:px-3 file:py-1.5 file:rounded file:border-0 file:bg-gray-100 file:text-gray-700 file:text-sm hover:file:bg-gray-200"/>
+                <p class="mt-1 text-xs text-gray-400">도형·그래프 등 LaTeX로 표현하기 어려운 그림은 이미지로 첨부하세요 (5MB 이하)</p>
             </div>
 
             <!-- 정답 -->

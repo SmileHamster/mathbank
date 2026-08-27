@@ -13,6 +13,7 @@
             <result property="sortOrder"   column="sort_order"/>
             <result property="title"       column="title"/>
             <result property="content"     column="content"/>
+            <result property="imagePath"   column="image_path"/>
             <result property="answer"      column="answer"/>
             <result property="explanation" column="explanation"/>
             <collection property="tagList" ofType="com.mathbank.problem.domain.Tag">
@@ -50,7 +51,7 @@
         SELECT
             es.id, es.name, es.total_count, es.created_at,
             esp.problem_id, esp.sort_order,
-            p.title, p.content, p.answer, p.explanation,
+            p.title, p.content, p.image_path, p.answer, p.explanation,
             t.id AS tag_id, t.tag_type, t.tag_value, t.sort_order AS tag_sort_order
         FROM exam_sheet es
         INNER JOIN exam_sheet_problem esp ON es.id = esp.exam_sheet_id

@@ -25,6 +25,7 @@ public class ProblemService {
 
     private final ProblemMapper problemMapper;
     private final TagMapper tagMapper;
+    private final ImageStorageService imageStorageService;
 
     public Map<String, Object> getProblemList(ProblemSearchDto searchDto) {
         List<ProblemListDto> problems = problemMapper.search(searchDto);
@@ -59,9 +60,13 @@ public class ProblemService {
     @Transactional
     public void createProblem(ProblemFormDto dto, Long memberId) {
         validateSingleUnitTag(dto.getTagIds());
+        String imagePath = (dto.getImage() != null && !dto.getImage().isEmpty())
+                ? imageStorageService.store(dto.getImage())
+                : null;
         Problem problem = Problem.builder()
                 .title(dto.getTitle())
                 .content(dto.getContent())
+                .imagePath(imagePath)
                 .answer(dto.getAnswer())
                 .explanation(dto.getExplanation())
                 .createdBy(memberId)
@@ -83,6 +88,15 @@ public class ProblemService {
         problem.setContent(dto.getContent());
         problem.setAnswer(dto.getAnswer());
         problem.setExplanation(dto.getExplanation());
+
+        if (dto.getImage() != null && !dto.getImage().isEmpty()) {
+            imageStorageService.delete(problem.getImagePath());
+            problem.setImagePath(imageStorageService.store(dto.getImage()));
+        } else if (dto.isRemoveImage()) {
+            imageStorageService.delete(problem.getImagePath());
+            problem.setImagePath(null);
+        }
+
         problemMapper.update(problem);
 
         problemMapper.deleteTagsByProblemId(id);
@@ -93,6 +107,10 @@ public class ProblemService {
 
     @Transactional
     public void deleteProblem(Long id) {
+        Problem problem = problemMapper.findById(id);
+        if (problem != null) {
+            imageStorageService.delete(problem.getImagePath());
+        }
         problemMapper.deleteById(id);
     }
 }

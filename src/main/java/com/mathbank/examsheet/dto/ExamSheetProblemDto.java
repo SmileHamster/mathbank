@@ -15,6 +15,7 @@ public class ExamSheetProblemDto {
     private Long problemId;
     private String title;
     private String content;
+    private String imagePath;
     private String answer;
     private String explanation;
     private List<Tag> tagList;

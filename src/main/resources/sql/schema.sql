@@ -50,6 +50,7 @@ CREATE TABLE problem (
     id          BIGINT    NOT NULL AUTO_INCREMENT  COMMENT '문제 PK',
     title       VARCHAR(500) NOT NULL              COMMENT '문제 제목',
     content     LONGTEXT  NOT NULL                 COMMENT '문제 본문 (LaTeX)',
+    image_path  VARCHAR(500) NULL                  COMMENT '문제 이미지 경로',
     answer      TEXT      NOT NULL                 COMMENT '정답',
     explanation LONGTEXT  NULL                     COMMENT '해설 (LaTeX)',
     created_by  BIGINT    NOT NULL                 COMMENT '등록자 member.id',

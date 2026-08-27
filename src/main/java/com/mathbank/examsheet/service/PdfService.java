@@ -8,10 +8,12 @@ import com.mathbank.examsheet.dto.ExamSheetProblemDto;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import java.awt.Color;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -21,6 +23,9 @@ import java.util.List;
 public class PdfService {
 
     private final ExamSheetService examSheetService;
+
+    @Value("${app.upload.dir}")
+    private String uploadDir;
 
     private BaseFont baseFont;
 
@@ -103,6 +108,27 @@ public class PdfService {
                 content.setSpacingAfter(4f);
                 document.add(content);
             }
+
+            if (p.getImagePath() != null && !p.getImagePath().isBlank()) {
+                addProblemImage(document, p.getImagePath());
+            }
+        }
+    }
+
+    private void addProblemImage(Document document, String imagePath) {
+        try {
+            String filename = imagePath.substring(imagePath.lastIndexOf('/') + 1);
+            java.io.File file = Path.of(uploadDir, filename).toFile();
+            if (!file.exists()) return;
+
+            Image image = Image.getInstance(file.getAbsolutePath());
+            image.scaleToFit(360f, 260f);
+            image.setIndentationLeft(20f);
+            image.setSpacingBefore(4f);
+            image.setSpacingAfter(8f);
+            document.add(image);
+        } catch (Exception e) {
+            // 이미지를 읽을 수 없어도 나머지 PDF 생성은 계속 진행
         }
     }
 

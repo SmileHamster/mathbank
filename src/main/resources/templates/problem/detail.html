@@ -30,6 +30,8 @@
             <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">문제</h2>
             <div th:text="${problem.content}"
                  class="text-gray-800 leading-relaxed whitespace-pre-wrap"></div>
+            <img th:if="${problem.imagePath != null}" th:src="@{${problem.imagePath}}"
+                 class="mt-4 max-w-md border border-gray-200 rounded-md"/>
         </div>
 
         <!-- 정답 토글 -->
