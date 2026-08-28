@@ -1,0 +1,3 @@
+# GitHub Actions 배포 시 ec2-user가 비밀번호 없이 mathbank 서비스만 재시작/조회할 수 있도록 허용.
+# /etc/sudoers.d/mathbank 로 설치 (visudo -cf 로 검증 후 적용할 것)
+ec2-user ALL=(root) NOPASSWD: /usr/bin/systemctl restart mathbank, /usr/bin/systemctl status mathbank, /usr/bin/systemctl is-active mathbank

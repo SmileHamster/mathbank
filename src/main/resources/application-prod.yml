@@ -1,3 +1,6 @@
+server:
+  port: 80
+
 spring:
   datasource:
     url: ${DB_URL}
@@ -6,6 +9,12 @@ spring:
 
   thymeleaf:
     cache: true
+
+app:
+  upload:
+    dir: /opt/mathbank/uploads/problem
+  admin:
+    init-password: ${ADMIN_INIT_PASSWORD}
 
 logging:
   level:
