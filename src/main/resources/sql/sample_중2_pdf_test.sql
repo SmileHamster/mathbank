@@ -1,12 +1,23 @@
 -- 중2 PDF 출력 테스트용 샘플 데이터 (15문제)
--- tag id: 중2=77 / 1학기=82 2학기=83
--- UNIT: 문자와식=85 함수=86
--- SUB_UNIT: 일차방정식=90 일차함수=91
--- TYPE: 개념확인=94 계산=95 서술=96 응용=97
--- DIFFICULTY: 하=98 중=99 상=100
+-- 태그 id는 환경마다 auto_increment 시작값이 다를 수 있어 하드코딩하지 않고 조회해서 쓴다.
 --
 -- ※ DB에 직접 실행할 것 (Spring 자동 실행 대상 아님)
 -- ※ created_by=1 은 기존 관리자 계정 ID
+
+SET @g_2 = (SELECT id FROM tag WHERE tag_type='GRADE' AND tag_value='중2');
+SET @sem_1 = (SELECT id FROM tag WHERE tag_type='SEMESTER' AND tag_value='1학기');
+SET @sem_2 = (SELECT id FROM tag WHERE tag_type='SEMESTER' AND tag_value='2학기');
+SET @u_alg = (SELECT id FROM tag WHERE tag_type='UNIT' AND tag_value='문자와 식');
+SET @u_func = (SELECT id FROM tag WHERE tag_type='UNIT' AND tag_value='함수');
+SET @su_lineq = (SELECT id FROM tag WHERE tag_type='SUB_UNIT' AND tag_value='일차방정식');
+SET @su_linfunc = (SELECT id FROM tag WHERE tag_type='SUB_UNIT' AND tag_value='일차함수');
+SET @ty_concept = (SELECT id FROM tag WHERE tag_type='TYPE' AND tag_value='개념확인');
+SET @ty_calc = (SELECT id FROM tag WHERE tag_type='TYPE' AND tag_value='계산');
+SET @ty_desc = (SELECT id FROM tag WHERE tag_type='TYPE' AND tag_value='서술');
+SET @ty_apply = (SELECT id FROM tag WHERE tag_type='TYPE' AND tag_value='응용');
+SET @d_low = (SELECT id FROM tag WHERE tag_type='DIFFICULTY' AND tag_value='하');
+SET @d_mid = (SELECT id FROM tag WHERE tag_type='DIFFICULTY' AND tag_value='중');
+SET @d_high = (SELECT id FROM tag WHERE tag_type='DIFFICULTY' AND tag_value='상');
 
 -- ================================================================
 -- GROUP A: 중2 1학기 · 문자와식 · 일차방정식 (8문제)
@@ -21,7 +32,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p1 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p1,77),(@p1,82),(@p1,85),(@p1,90),(@p1,95),(@p1,98);
+(@p1,@g_2),(@p1,@sem_1),(@p1,@u_alg),(@p1,@su_lineq),(@p1,@ty_calc),(@p1,@d_low);
 
 -- [하] 2 ─────────────────────────────────────────────────────────
 INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
@@ -32,7 +43,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p2 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p2,77),(@p2,82),(@p2,85),(@p2,90),(@p2,95),(@p2,98);
+(@p2,@g_2),(@p2,@sem_1),(@p2,@u_alg),(@p2,@su_lineq),(@p2,@ty_calc),(@p2,@d_low);
 
 -- [하] 3 ─────────────────────────────────────────────────────────
 INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
@@ -43,7 +54,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p3 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p3,77),(@p3,82),(@p3,85),(@p3,90),(@p3,95),(@p3,98);
+(@p3,@g_2),(@p3,@sem_1),(@p3,@u_alg),(@p3,@su_lineq),(@p3,@ty_calc),(@p3,@d_low);
 
 -- [중] 4 ─────────────────────────────────────────────────────────
 INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
@@ -54,7 +65,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p4 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p4,77),(@p4,82),(@p4,85),(@p4,90),(@p4,95),(@p4,99);
+(@p4,@g_2),(@p4,@sem_1),(@p4,@u_alg),(@p4,@su_lineq),(@p4,@ty_calc),(@p4,@d_mid);
 
 -- [중] 5 ─────────────────────────────────────────────────────────
 INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
@@ -65,7 +76,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p5 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p5,77),(@p5,82),(@p5,85),(@p5,90),(@p5,97),(@p5,99);
+(@p5,@g_2),(@p5,@sem_1),(@p5,@u_alg),(@p5,@su_lineq),(@p5,@ty_apply),(@p5,@d_mid);
 
 -- [중] 6 ─────────────────────────────────────────────────────────
 INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
@@ -76,7 +87,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p6 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p6,77),(@p6,82),(@p6,85),(@p6,90),(@p6,97),(@p6,99);
+(@p6,@g_2),(@p6,@sem_1),(@p6,@u_alg),(@p6,@su_lineq),(@p6,@ty_apply),(@p6,@d_mid);
 
 -- [상] 7 ─────────────────────────────────────────────────────────
 INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
@@ -87,7 +98,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p7 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p7,77),(@p7,82),(@p7,85),(@p7,90),(@p7,96),(@p7,100);
+(@p7,@g_2),(@p7,@sem_1),(@p7,@u_alg),(@p7,@su_lineq),(@p7,@ty_desc),(@p7,@d_high);
 
 -- [상] 8 ─────────────────────────────────────────────────────────
 INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
@@ -98,7 +109,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p8 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p8,77),(@p8,82),(@p8,85),(@p8,90),(@p8,96),(@p8,100);
+(@p8,@g_2),(@p8,@sem_1),(@p8,@u_alg),(@p8,@su_lineq),(@p8,@ty_desc),(@p8,@d_high);
 
 -- ================================================================
 -- GROUP B: 중2 2학기 · 함수 · 일차함수 (7문제)
@@ -113,7 +124,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p9 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p9,77),(@p9,83),(@p9,86),(@p9,91),(@p9,94),(@p9,98);
+(@p9,@g_2),(@p9,@sem_2),(@p9,@u_func),(@p9,@su_linfunc),(@p9,@ty_concept),(@p9,@d_low);
 
 -- [하] 10 ────────────────────────────────────────────────────────
 INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
@@ -124,7 +135,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p10 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p10,77),(@p10,83),(@p10,86),(@p10,91),(@p10,95),(@p10,98);
+(@p10,@g_2),(@p10,@sem_2),(@p10,@u_func),(@p10,@su_linfunc),(@p10,@ty_calc),(@p10,@d_low);
 
 -- [중] 11 ────────────────────────────────────────────────────────
 INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
@@ -135,7 +146,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p11 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p11,77),(@p11,83),(@p11,86),(@p11,91),(@p11,95),(@p11,99);
+(@p11,@g_2),(@p11,@sem_2),(@p11,@u_func),(@p11,@su_linfunc),(@p11,@ty_calc),(@p11,@d_mid);
 
 -- [중] 12 ────────────────────────────────────────────────────────
 INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
@@ -146,7 +157,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p12 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p12,77),(@p12,83),(@p12,86),(@p12,91),(@p12,96),(@p12,99);
+(@p12,@g_2),(@p12,@sem_2),(@p12,@u_func),(@p12,@su_linfunc),(@p12,@ty_desc),(@p12,@d_mid);
 
 -- [중] 13 ────────────────────────────────────────────────────────
 INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
@@ -157,7 +168,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p13 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p13,77),(@p13,83),(@p13,86),(@p13,91),(@p13,97),(@p13,99);
+(@p13,@g_2),(@p13,@sem_2),(@p13,@u_func),(@p13,@su_linfunc),(@p13,@ty_apply),(@p13,@d_mid);
 
 -- [상] 14 ── 긴 내용 (페이지 넘김 테스트용) ─────────────────────
 INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
@@ -168,7 +179,7 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p14 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p14,77),(@p14,83),(@p14,86),(@p14,91),(@p14,96),(@p14,100);
+(@p14,@g_2),(@p14,@sem_2),(@p14,@u_func),(@p14,@su_linfunc),(@p14,@ty_desc),(@p14,@d_high);
 
 -- [상] 15 ── 매우 긴 내용 (페이지 넘김 · content 잘림 테스트) ───
 INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
@@ -179,4 +190,4 @@ INSERT INTO problem (title, content, answer, explanation, created_by) VALUES
  1);
 SET @p15 = LAST_INSERT_ID();
 INSERT INTO problem_tag (problem_id, tag_id) VALUES
-(@p15,77),(@p15,83),(@p15,86),(@p15,91),(@p15,96),(@p15,100);
+(@p15,@g_2),(@p15,@sem_2),(@p15,@u_func),(@p15,@su_linfunc),(@p15,@ty_desc),(@p15,@d_high);

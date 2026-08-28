@@ -46,12 +46,34 @@ ssh -i mathbank-key.pem ec2-user@<EC2_퍼블릭_IP>
 # Java 17 설치
 sudo dnf install -y java-17-amazon-corretto-headless
 
-# 80번 포트는 특권 포트이므로, 일반 사용자(ec2-user)로 실행되는 java가 바인딩할 수 있도록 권한 부여
-sudo setcap 'cap_net_bind_service=+ep' $(readlink -f $(which java))
-
 # 앱 디렉토리 준비
 sudo mkdir -p /opt/mathbank/uploads/problem
 sudo chown -R ec2-user:ec2-user /opt/mathbank
+```
+
+앱은 일반 사용자(`ec2-user`)로 실행하고 기본 8080 포트를 쓴다 (`application-prod.yml`도 `server.port: 8080`).
+80번 포트는 특권 포트라 일반 사용자 프로세스가 직접 바인딩할 수 없는데,
+`setcap`으로 java 실행파일에 `cap_net_bind_service`를 주는 방법은 **쓰지 않는다** —
+file capability가 설정된 실행파일은 glibc가 secure-execution mode로 돌리면서
+`$ORIGIN` 상대경로 RPATH와 `LD_LIBRARY_PATH`를 무시해버려서,
+JVM 런처가 같은 디렉토리의 `libjli.so`를 못 찾고 `error while loading shared libraries: libjli.so` 로 깨진다.
+대신 iptables로 80번 포트 트래픽을 커널 레벨에서 8080으로 리다이렉트한다:
+
+```bash
+sudo dnf install -y iptables
+sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+```
+
+이 규칙은 재부팅하면 사라지므로, 부팅마다 다시 걸어주는 작은 systemd 유닛을 등록한다
+(로컬 `deploy/mathbank-portfwd.service` 참고):
+
+```bash
+scp -i mathbank-key.pem deploy/mathbank-portfwd.service ec2-user@<EC2_IP>:/tmp/
+ssh -i mathbank-key.pem ec2-user@<EC2_IP> '
+  sudo mv /tmp/mathbank-portfwd.service /etc/systemd/system/mathbank-portfwd.service
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now mathbank-portfwd
+'
 ```
 
 `.env` 파일 생성 (`deploy/.env.example` 참고, 실제 값으로 채워서 EC2에 직접 작성 — 절대 git에 커밋하지 않음):
@@ -146,7 +168,8 @@ ssh -i mathbank-key.pem ec2-user@<EC2_IP> 'sudo journalctl -u mathbank -n 50 --n
 
 ## 트러블슈팅
 
-- **80 포트 바인딩 실패**: `setcap` 적용 여부와 대상이 시스템에 실제 사용되는 `java` 바이너리인지 확인 (`readlink -f $(which java)`).
+- **80번 포트로 접속이 안 됨**: `sudo iptables -t nat -L PREROUTING -n`으로 리다이렉트 규칙이 걸려있는지, `mathbank-portfwd` 서비스가 `enabled`인지 확인. 재부팅 후에도 안 되면 유닛이 `multi-user.target`에 제대로 등록됐는지(`systemctl is-enabled mathbank-portfwd`) 확인.
+- **java 실행 시 `libjli.so` 관련 오류**: java 바이너리에 file capability(`setcap`)가 걸려있지 않은지 확인 (`getcap $(readlink -f $(which java))`). 걸려있다면 `sudo setcap -r <경로>`로 제거 — capability가 있으면 glibc가 secure-execution mode로 실행되어 JVM이 자기 옆의 공유 라이브러리를 못 찾는다.
 - **DB 연결 실패**: RDS 보안 그룹이 `mathbank-ec2-sg`를 3306으로 허용하는지, `.env`의 `DB_URL`에 정확한 RDS 엔드포인트가 들어갔는지 확인.
 - **systemctl restart 시 sudo 비밀번호 요구**: `/etc/sudoers.d/mathbank` 적용 여부와 `visudo -cf` 검증 통과 여부 확인.
 - **GitHub Actions SSH 실패**: `EC2_SSH_KEY`에 개인키 전체(줄바꿈 포함)가 들어갔는지, EC2 `authorized_keys`에 대응하는 공개키가 등록됐는지 확인.

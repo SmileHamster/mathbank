@@ -1,0 +1,13 @@
+[Unit]
+Description=Forward external port 80 to mathbank app on 8080
+After=network.target
+Before=mathbank.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c '/sbin/iptables -t nat -C PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080 || /sbin/iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080'
+ExecStop=/sbin/iptables -t nat -D PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
+
+[Install]
+WantedBy=multi-user.target
