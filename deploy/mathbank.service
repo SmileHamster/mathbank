@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=ec2-user
+User=mathbank-admin
 WorkingDirectory=/opt/mathbank
 EnvironmentFile=/opt/mathbank/.env
 ExecStart=/usr/bin/java -jar /opt/mathbank/app.jar --spring.profiles.active=prod

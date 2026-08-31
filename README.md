@@ -2,7 +2,7 @@
 
 학년·단원·유형·난이도 6축 태그로 문제를 분류하고, 조건만 입력하면 시험지를 자동 생성해 PDF로 출력하는 시스템입니다.
 
-**🔗 배포 링크: http://13.60.185.159**  (테스트 계정: `admin` / 문의 시 제공)
+**🔗 배포 링크: http://34.53.95.30**  (테스트 계정: `admin` / 문의 시 제공)
 
 ---
 
@@ -157,13 +157,17 @@ mysql -u root -p mathbank < src/main/resources/sql/sample_중2_100_problems.sql
 
 ## 배포
 
-AWS EC2(애플리케이션) + RDS(MariaDB)로 운영하며, `main` 브랜치에 push하면 GitHub Actions가 Maven 빌드 → EC2로 jar 전송 → systemd 서비스 재시작까지 자동으로 처리합니다. 인프라 구성과 트러블슈팅 과정은 [DEPLOY.md](DEPLOY.md)에 정리했습니다.
+Google Cloud Compute Engine Always Free VM(`e2-micro`) 한 대에 애플리케이션과 MariaDB를 함께 운영합니다. `main` 브랜치에 push하면 GitHub Actions가 Maven 빌드 → VM으로 jar 전송 → systemd 서비스 재시작까지 자동으로 처리합니다. 인프라 구성과 트러블슈팅 과정은 [DEPLOY.md](DEPLOY.md)에 정리했습니다.
+
+> 처음엔 AWS EC2 + RDS로 배포했습니다. AWS 프리티어는 12개월 한정이라, 장기간 켜둘 포트폴리오 프로젝트에는 영구 무료인 GCP Always Free가 더 맞다고 판단해 옮겼습니다 (RDS 대신 같은 VM에 MariaDB를 직접 설치).
 
 **배포 과정에서 겪은 문제들**
-- 80번 포트를 `setcap`으로 열려다 JVM이 깨짐 → glibc secure-execution mode가 `$ORIGIN` 상대경로 라이브러리 탐색을 막아버려서 `libjli.so`를 못 찾는 것이 원인. iptables `80→8080` 리다이렉트로 전환
-- RDS가 TLS 연결을 강제(`require_secure_transport=ON`)해서 JDBC URL에 `sslMode=trust` 필요
-- 로컬 개발 DB의 우연한 auto_increment 값(태그 id 76~100 등)을 시드 SQL에 하드코딩해뒀던 게 새 DB(RDS)에선 FK 에러로 깨짐 → `(tag_type, tag_value)` 조회 기반으로 전환해 환경에 무관하게 동작하도록 수정
+- 80번 포트를 `setcap`으로 열려다 JVM이 깨짐 → glibc secure-execution mode가 `$ORIGIN` 상대경로 라이브러리 탐색을 막아버려서 `libjli.so`를 못 찾는 것이 원인. iptables `80→8080` 리다이렉트로 전환 (AWS·GCP 공통)
+- RDS가 TLS 연결을 강제(`require_secure_transport=ON`)해서 JDBC URL에 `sslMode=trust` 필요 — GCP 이전 후에는 DB가 로컬(`localhost`)이라 이 문제 자체가 사라짐
+- 로컬 개발 DB의 우연한 auto_increment 값(태그 id 76~100 등)을 시드 SQL에 하드코딩해뒀던 게 새 DB에선 FK 에러로 깨짐 → `(tag_type, tag_value)` 조회 기반으로 전환해 환경에 무관하게 동작하도록 수정
 - 관리자 계정이 재시작마다 `admin1234`로 초기화되던 로직을 발견 — 최초 1회만 생성하고 초기 비밀번호는 환경변수(`ADMIN_INIT_PASSWORD`)로 주입하도록 수정
+- GCP는 인스턴스 생성 시 키페어를 자동으로 안 심어줘서 메타데이터 SSH 키를 직접 등록해야 했는데, OS Login이 켜져있으면 그 키가 통째로 무시됨 — 인스턴스 메타데이터에서 OS Login을 끄고 재부팅해 해결
+- AWS `ec2-user`처럼 GCP도 최초 생성된 계정을 자동으로 `google-sudoers` 그룹(비밀번호 없는 전체 sudo)에 넣어준다는 걸 확인 — CI 배포용으로 별도 scoped sudoers를 만들어뒀지만, 사실상 이 기본 그룹 권한이 더 넓음
 
 ---
 
